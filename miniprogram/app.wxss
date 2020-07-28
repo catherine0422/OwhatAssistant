@@ -1,0 +1,9 @@
+/**app.wxss**/
+page{
+  --themeColor:#1BC5BD;
+  --bgColor:#F3F6F9;
+  --muteColor: #707070;
+  --lineColor: #ebebeb;
+  --moneyColor: #f64079;
+  --progressColor: #fe6a7a;
+}

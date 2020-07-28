@@ -1,0 +1,9 @@
+{
+  "triggers": [
+    {
+      "name": "everyTwoMinutes",
+      "type": "timer",
+      "config": "0 */1 * * * * *"
+    }
+  ]
+}

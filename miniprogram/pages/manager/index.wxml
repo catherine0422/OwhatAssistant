@@ -1,0 +1,26 @@
+<view class="root">
+  <view class="form-container">
+    <view class="header">
+      <text class="title">添加新项目</text>
+    </view>
+    <form catchsubmit="formSubmit" catchreset="formReset">
+      <view class="id">
+        <text>项目Id：</text>
+        <input type="text" name="id"/>
+      </view>
+      <view class="aim">
+        <text>目标金额：</text>
+        <input type="number" name="aim"/>
+      </view>
+
+    <view class="btn-area">
+      <button  class="btn-submit" type="primary" formType="submit">提交</button>
+    </view>
+    </form>
+
+
+  </view>
+</view>
+
+
+

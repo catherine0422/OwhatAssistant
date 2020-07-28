@@ -1,0 +1,44 @@
+/* miniprogram/pages/manager/index.wxss */
+.root{
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--bgColor);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+.form-container{
+  margin: 40rpx auto;
+  padding: 30rpx 20rpx;
+  width: 80%;
+  background-color: white;
+  border-radius: 10rpx;
+  box-shadow: 0rpx 4rpx 8rpx 4rpx rgba(0, 0, 0, 0.1);
+}
+.btn-submit{
+  margin-top: 30rpx;
+}
+
+input{
+  display: inline-block;
+  border: solid 1px gainsboro;
+  padding: 8rpx 16rpx;
+}
+
+.id, .aim{
+  margin-bottom: 20rpx;
+  display: flex;
+  align-items: center;
+}
+form text{
+  min-width: 180rpx;
+}
+.header{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 30rpx;
+}
+.title{
+  font-size: 36rpx;
+}

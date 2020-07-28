@@ -1,0 +1,40 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/finish/index",
+    "pages/manager/index"
+  ],
+  "window": {
+    "backgroundColor": "#F6F6F6",
+    "backgroundTextStyle": "dark",
+    "navigationBarBackgroundColor": "#fe6a7a",
+    "navigationBarTitleText": "Owhat数据助手",
+    "navigationBarTextStyle": "white"
+  },
+  "tabBar": {
+    "color": "#707070",
+    "selectedColor": "#fe6a7a",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "进行中",
+        "iconPath": "icons/start.png",
+        "selectedIconPath": "icons/start-selected.png"
+      },
+      {
+        "pagePath": "pages/finish/index",
+        "text": "已结束",
+        "iconPath": "icons/finish.png",
+        "selectedIconPath": "icons/finish-selected.png"
+      },
+      {
+        "pagePath": "pages/manager/index",
+        "text": "管理",
+        "iconPath": "icons/manager.png",
+        "selectedIconPath": "icons/manager-selected.png"
+      }
+    ]
+  },
+  "sitemapLocation": "sitemap.json",
+  "style": "v2"
+}

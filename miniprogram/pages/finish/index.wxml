@@ -1,0 +1,44 @@
+<!--miniprogram/pages/finish/index.wxml-->
+<scroll-view scroll-y="true">
+  <view class="root">
+    <view class="goodInfo"
+    wx:for="{{goodInfoList}}"
+    wx:key="*this">
+    <view class="info-title">{{item.title}}</view>
+    <view class="line"></view>
+    <view class="info-body">
+        <view wx:if="{{item.aim}}">
+          <view class='amount' >
+            <view class="left">
+              <view>完成金额 (元)</view>
+              <view class="money">￥{{item.currentSalesInfo.money}}</view>
+            </view>
+            <view class="right">
+              <view>目标金额 (元)</view>
+              <view class="money">￥{{item.aim}}</view>
+            </view>
+          </view>
+          <progress percent="{{item.progress}}" show-info stroke-width="12" activeColor="#fe6a7a"
+          border-radius = "10rpx"/>
+        </view>
+        <view class="count">
+          <view wx:if="{{!item.aim}}" class='left'>
+            <view>完成金额 (元)</view>
+            <view class="money">￥{{item.currentSalesInfo.money}}</view>
+          </view>
+          <view class="left">
+            <view>参与人数</view>
+            <view class="number">{{item.currentSalesInfo.userCount}}人</view>
+          </view>
+          <view class="right">
+            <view>项目时长</view>
+            <view class="number">{{item.duration}}</view>
+          </view>
+        </view>
+        <view class="btn-aria">
+          <button type="primary" data-id="{{item.goodId}}" data-name="{{item.title}}" bindtap="deleteItem">删除</button>
+        </view>
+      </view>
+    </view>
+  </view>
+</scroll-view>

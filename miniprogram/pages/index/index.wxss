@@ -1,0 +1,66 @@
+scroll-view{
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--bgColor);
+}
+.root{
+  background-color: var(--bgColor);
+}
+.header{
+  display: flex;
+  justify-content: space-between;
+  background-color: white;
+  padding: 20rpx;
+}
+.header text{
+  color: var(--muteColor);
+}
+.goodInfo{
+  margin-top: 22rpx;
+  padding: 30rpx;
+  background-color: white;
+}
+.info-title{
+  font-size: 35rpx;
+  padding-top: 4rpx;
+  padding-bottom: 15rpx;
+
+}
+.info-body{
+  padding: 15rpx;
+}
+.line{
+  margin: 20rpx auto;
+  height: 2rpx;
+  width: 100%;
+  background-color: var(--lineColor);
+}
+.amount, .count{
+  display: flex;
+  justify-content: space-between;
+}
+.money, .number{
+  margin-top: 8rpx;
+  color: var(--moneyColor);
+}
+progress{
+  margin: 40rpx 15rpx;
+}
+.right{
+  text-align: right;
+}
+.number{
+  color: var(--muteColor);
+}
+.refresh{
+  width: 30rpx;
+  height: 30rpx;
+  margin-right: 8rpx;
+}
+.refresh-group{
+  display: flex;
+  align-items: center;
+}
+.btn-aria{
+  margin-top: 20rpx;
+}
