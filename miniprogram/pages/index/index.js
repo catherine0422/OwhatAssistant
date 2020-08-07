@@ -100,38 +100,4 @@ Page({
       })
     });
   },
-
-  deleteItem(e){
-    console.log(e);
-    let goodId = e.target.dataset.id;
-    let name = e.target.dataset.name;
-    wx.showModal({
-      content: '确认删除项目《'+ name +'》?',
-      success: res => {
-        if (res.confirm){
-          this.deleteItemId(goodId);
-        }
-      }
-    })
-  },
-
-  async deleteItemId(id){
-    wx.showLoading({
-      title: '删除中'
-    })
-    const res = await wx.cloud.callFunction({
-      name: 'deleteItem',
-      data: {
-        id: id
-      }
-    })
-    await this.getGoodInfoList();
-    wx.hideLoading({
-      complete: (res) => {
-        wx.showToast({
-          title: '删除成功',
-        })
-      },
-    })
-  }
 })

@@ -1,8 +1,8 @@
 {
   "pages": [
+    "pages/search/index",
     "pages/index/index",
-    "pages/finish/index",
-    "pages/manager/index"
+    "pages/finish/index"    
   ],
   "window": {
     "backgroundColor": "#F6F6F6",
@@ -16,6 +16,12 @@
     "selectedColor": "#fe6a7a",
     "list": [
       {
+        "pagePath": "pages/search/index",
+        "text": "查询",
+        "iconPath": "icons/search.png",
+        "selectedIconPath": "icons/search-selected.png"
+      },
+      {
         "pagePath": "pages/index/index",
         "text": "进行中",
         "iconPath": "icons/start.png",
@@ -26,12 +32,6 @@
         "text": "已结束",
         "iconPath": "icons/finish.png",
         "selectedIconPath": "icons/finish-selected.png"
-      },
-      {
-        "pagePath": "pages/manager/index",
-        "text": "管理",
-        "iconPath": "icons/manager.png",
-        "selectedIconPath": "icons/manager-selected.png"
       }
     ]
   },

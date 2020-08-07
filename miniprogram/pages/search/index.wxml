@@ -1,0 +1,97 @@
+<scroll-view scroll-y="true">
+	<view class="root">
+		<view class="search">
+			<form class="search-form" catchsubmit="formSubmit">
+				<view class="form-id">
+					<text>查询项目信息：</text>
+					<input name="goodId" placeholder="请输入项目ID" />
+					<image class="question" src="../../icons/question.png" mode="aspectFit" bindtap="question"></image>
+				</view>
+				<text class="hint">注：只能读取owhat公开项目，隐藏的项目（只显示前十名）以及下架的项目都无法读取。</text>
+				<view class="btn-aria">
+					<button type="primary" formType="submit" disabled="{{btnDisable}}">查询</button>
+				</view>
+			</form>
+		</view>
+
+		<view class="log" wx:if="{{log.length>0}}">
+			<text class="log-title">运行日志：</text>
+			<view class="log-item" wx:for="{{log}}" wx:key="*this">
+				{{item}}
+			</view>
+		</view>
+
+		<view class="goodInfo">
+			<view class="info-title">{{title}}</view>
+			<view class="fan">{{fanClub}}</view>
+			<view class="idol">{{star}}</view>
+			<view class="line"></view>
+			<view class="info-body">
+				<view class="time">
+					<view class="left">
+						<view>开始时间</view>
+						<view class="number">{{localTime.startTime}}</view>
+					</view>
+					<view class='left'>
+						<view>结束时间</view>
+						<view class="number">{{localTime.endTime}}</view>
+					</view>
+					<view class="right">
+						<view>时长</view>
+						<view class="number">{{localTime.duration}}</view>
+					</view>
+				</view>
+				<view class="items">
+					<view class="title">商品详情：</view>
+					<view wx:for="{{salesItems}}">
+						{{index+1}}. {{item.name}} (￥{{item.price}}) 售出 {{item.saleStock}} 件
+					</view>
+				</view>
+				<view class="line line2"></view>
+				<view class="count">
+					<view class="left">
+						<view>参与人数</view>
+						<view class="number">{{userCount}}人</view>
+					</view>
+					<view class='left'>
+						<view>完成金额 (元)</view>
+						<view class="money">￥{{money}}</view>
+					</view>
+					<view class="right">
+						<view>人均</view>
+						<view class="money">￥{{average}}</view>
+					</view>
+				</view>
+				<view class="userClass">
+					<view class="title">
+						区间人数：
+					</view>
+					<view class="body">
+						<view wx:if="{{userClass.cThreeThousand>0}}">
+							<text>3000以上：</text>
+							<text class="people">{{userClass.cThreeThousand}}人</text>
+						</view>
+						<view wx:if="{{userClass.cThousand>0}}">
+							<text >1000 ~ 3000：</text>
+							<text class="people">{{userClass.cThousand}}人</text></view>
+						<view wx:if="{{userClass.cThreeHundred>0}}">
+							<text>300 ~ 1000：</text>
+							<text class="people">{{userClass.cThreeHundred}}人</text></view>
+						<view wx:if="{{userClass.cHundred>0}}">
+							<text>100 ~ 300: </text>
+							<text class="people">{{userClass.cHundred}}人</text></view>
+						<view wx:if="{{userClass.cFifty>0}}">
+							<text>50 ~ 100: </text>
+							<text class="people">{{userClass.cFifty}}人</text></view>
+						<view wx:if="{{userClass.cTwenty>0}}">
+							<text>20 ~ 50: </text>
+							<text class="people">{{userClass.cTwenty}}人</text></view>
+						<view wx:if="{{userClass.cZero>0}}">
+							<text>0 ~ 20: </text>
+							<text class="people">{{userClass.cZero}}人</text></view>
+					</view>
+				</view>
+			</view>
+		</view>
+	</view>
+</scroll-view>

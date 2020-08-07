@@ -45,9 +45,6 @@
             <view class="number">{{item.timeLeft}}</view>
           </view>
         </view>
-        <view class="btn-aria">
-          <button type="primary" data-id="{{item.goodId}}" data-name="{{item.title}}" bindtap="deleteItem">删除</button>
-        </view>
       </view>
     </view>
   </view>

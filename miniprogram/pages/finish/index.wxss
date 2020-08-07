@@ -51,6 +51,3 @@ progress{
 .number{
   color: var(--muteColor);
 }
-.btn-aria{
-  margin-top: 20rpx;
-}

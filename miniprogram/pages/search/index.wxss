@@ -1,0 +1,106 @@
+scroll-view{
+  width: 100vw;
+  height: 100vh;
+}
+.root{
+  width: 100vw;
+  height: 105vh;
+  background-color: var(--bgColor);
+}
+.search{
+  background-color: white;
+  padding: 30rpx;
+}
+.form-id{
+  display: flex;
+  align-items: center;
+}
+.btn-aria{
+  margin-top: 20rpx;
+}
+input{
+  border: solid 1px gainsboro;
+  padding: 6rpx 10rpx;
+}
+.goodInfo{
+  margin-top: 22rpx;
+  padding: 30rpx;
+  background-color: white;
+}
+.info-title{
+  font-size: 35rpx;
+  padding-top: 4rpx;
+  padding-bottom: 15rpx;
+  text-align: center;
+}
+.fan, .idol{
+  text-align: right;
+}
+.info-body{
+  padding: 15rpx;
+}
+.line{
+  margin: 20rpx auto;
+  height: 2rpx;
+  width: 100%;
+  background-color: var(--lineColor);
+}
+.count, .time{
+  display: flex;
+  justify-content: space-between;
+}
+.count{
+  margin-top: 20rpx;
+}
+.items, .userClass{
+  margin: 20rpx 10rpx;
+  padding: 20rpx;
+  border: solid 1px #ffb8bf;
+  border-radius: 15rpx;
+}
+.userClass .title,
+.items .title{
+  margin-bottom: 20rpx;
+}
+.line2{
+  margin-top: 40rpx;
+  margin-bottom: 40rpx;
+}
+.userClass .people{
+  margin-left: 40rpx;
+  color: var(--muteColor);
+}
+.money, .number{
+  margin-top: 8rpx;
+  color: var(--moneyColor);
+}
+.left, .right{
+  flex: 1;
+  text-align: center;
+}
+
+.number{
+  color: var(--muteColor);
+}
+.log{
+  background-color: white;
+  margin-top: 22rpx;
+  padding: 30rpx;
+}
+.log-title{
+  margin-bottom: 20rpx;
+  font-size: 22px;
+}
+.log-item{
+  color: var(--muteColor);
+  margin: 10rpx 20rpx;
+}
+.question{
+  width: 50rpx;
+  height: 50rpx;
+  margin-left: 14rpx;
+}
+.hint{
+  font-size: 25rpx;
+  color: var(--muteColor);
+}
