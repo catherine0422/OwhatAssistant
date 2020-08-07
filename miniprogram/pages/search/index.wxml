@@ -93,5 +93,7 @@
 				</view>
 			</view>
 		</view>
+		
 	</view>
+	<view class="bottom">联系作者：@好萌好可爱hh</view>
 </scroll-view>

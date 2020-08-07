@@ -1,11 +1,11 @@
 scroll-view{
   width: 100vw;
-  height: 100vh;
+  min-height: 100vh;
+  background-color: var(--bgColor);
 }
 .root{
   width: 100vw;
-  height: 105vh;
-  background-color: var(--bgColor);
+  min-height: 95vh;
 }
 .search{
   background-color: white;
@@ -103,4 +103,9 @@ input{
 .hint{
   font-size: 25rpx;
   color: var(--muteColor);
+}
+.bottom{
+  color: var(--muteColor);
+  text-align: center;
+  margin: 20rpx 0;
 }

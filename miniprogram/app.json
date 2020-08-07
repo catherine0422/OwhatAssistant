@@ -1,8 +1,6 @@
 {
   "pages": [
-    "pages/search/index",
-    "pages/index/index",
-    "pages/finish/index"    
+    "pages/search/index"
   ],
   "window": {
     "backgroundColor": "#F6F6F6",
@@ -10,30 +8,6 @@
     "navigationBarBackgroundColor": "#fe6a7a",
     "navigationBarTitleText": "Owhat数据助手",
     "navigationBarTextStyle": "white"
-  },
-  "tabBar": {
-    "color": "#707070",
-    "selectedColor": "#fe6a7a",
-    "list": [
-      {
-        "pagePath": "pages/search/index",
-        "text": "查询",
-        "iconPath": "icons/search.png",
-        "selectedIconPath": "icons/search-selected.png"
-      },
-      {
-        "pagePath": "pages/index/index",
-        "text": "进行中",
-        "iconPath": "icons/start.png",
-        "selectedIconPath": "icons/start-selected.png"
-      },
-      {
-        "pagePath": "pages/finish/index",
-        "text": "已结束",
-        "iconPath": "icons/finish.png",
-        "selectedIconPath": "icons/finish-selected.png"
-      }
-    ]
   },
   "sitemapLocation": "sitemap.json",
   "style": "v2"
