@@ -336,10 +336,14 @@ Page({
 
   getLocalTime(nS) {
     let time = new Date(parseInt(nS));
-    let hours = time.getUTCHours() + 8;
-    let minutes = time.getMinutes();
-    let days = time.getDate();
     let months = time.getMonth() + 1;
+    let days = time.getDate();
+    let hours = time.getUTCHours() + 8;
+    if (hours >= 24){
+      hours = hours - 24;
+      days = days + 1;
+    } 
+    let minutes = time.getMinutes();    
     if (minutes<10){
       minutes = '0'+ minutes;
     }
