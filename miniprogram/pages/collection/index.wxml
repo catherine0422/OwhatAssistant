@@ -1,2 +1,107 @@
 <!--miniprogram/pages/collection/index.wxml-->
-<text>miniprogram/pages/collection/index.wxml</text>
+<scroll-view scroll-y="true">
+	<view class="root">
+
+    <view class="goodInfos" wx:for="{{collection}}" wx:key="index">
+      <view class="log" wx:if="{{item.log.length>0}}">
+        <text class="log-title">运行日志：</text>
+        <view class="log-item" wx:for="{{item.log}}" wx:index="logIdx" wx:key="logIdx" wx:for-item="logItem">
+          {{logItem}}
+        </view>
+      </view>
+      
+      <view class="goodInfo">
+        <view class="info-maintitle">
+          <view class="info-title">{{item.title}}</view>
+          <view class="fan">
+            <view >{{item.fanClub}}</view>
+            <view >{{item.star}}</view>
+          </view>
+        </view>
+        <view class="info-subtitle">
+          <view class="deleteCollection" >
+            <image class="collection" src="../../icons/collection-selected-full.png" mode="aspectFit" bindtap="deleteCollection" data-idx="{{index}}"></image>
+            <view class="deleteCollectionText" bindtap="deleteCollection" data-idx="{{index}}">取消收藏</view>
+          </view>
+          <view class="showDetail" >
+            <view class="showDetailText" data-idx="{{index}}" bindtap="showDetail">显示详情</view>
+            <image class="chevron" wx:if="{{!item.localTime}}" src="../../icons/chevron.png" mode="aspectFit" data-idx="{{index}}" bindtap="showDetail"></image>
+            <image class="chevron" wx:else src="../../icons/chevron-inverse.png" mode="aspectFit" data-idx="{{index}}" bindtap="showDetail"></image>
+          </view>
+        </view>
+
+        <view class="line" wx:if="{{item.localTime}}"></view>
+        <view class="info-body" wx:if="{{item.localTime}}">
+          <view class="time" >
+            <view class="left">
+              <view>开始时间</view>
+              <view class="number">{{item.localTime.startTime}}</view>
+            </view>
+            <view class='left'>
+              <view>结束时间</view>
+              <view class="number">{{item.localTime.endTime}}</view>
+            </view>
+            <view class="right">
+              <view>时长</view>
+              <view class="number">{{item.localTime.duration}}</view>
+            </view>
+          </view>
+          <view class="items" >
+            <view class="title">商品详情：</view>
+            <view wx:for="{{item.salesItems}}" wx:key="saleIdx" wx:for-item="saleItem" wx:for-index="saleIdx">
+              {{saleIdx+1}}. {{saleItem.name}} (￥{{saleItem.price}}) 售出 {{saleItem.saleStock}} 件
+            </view>
+          </view>
+          <view class="line line2" ></view>
+          <view class="count">
+            <view class="left">
+              <view>参与人数</view>
+              <view class="number">{{item.userCount}}人</view>
+            </view>
+            <view class='left'>
+              <view>完成金额 (元)</view>
+              <view class="money">￥{{item.money}}</view>
+            </view>
+            <view class="right">
+              <view>人均</view>
+              <view class="money">￥{{item.average}}</view>
+            </view>
+          </view>
+          <view class="userClass">
+            <view class="title">
+              区间人数：
+            </view>
+            <view class="body">
+              <view wx:if="{{item.userClass.cThreeThousand>0}}">
+                <text>3000以上：</text>
+                <text class="people">{{item.userClass.cThreeThousand}}人</text>
+              </view>
+              <view wx:if="{{item.userClass.cThousand>0}}">
+                <text >1000 ~ 3000：</text>
+                <text class="people">{{item.userClass.cThousand}}人</text></view>
+              <view wx:if="{{item.userClass.cThreeHundred>0}}">
+                <text>300 ~ 1000：</text>
+                <text class="people">{{item.userClass.cThreeHundred}}人</text></view>
+              <view wx:if="{{item.userClass.cHundred>0}}">
+                <text>100 ~ 300: </text>
+                <text class="people">{{item.userClass.cHundred}}人</text></view>
+              <view wx:if="{{item.userClass.cFifty>0}}">
+                <text>50 ~ 100: </text>
+                <text class="people">{{item.userClass.cFifty}}人</text></view>
+              <view wx:if="{{item.userClass.cTwenty>0}}">
+                <text>20 ~ 50: </text>
+                <text class="people">{{item.userClass.cTwenty}}人</text></view>
+              <view wx:if="{{item.userClass.cZero>0}}">
+                <text>0 ~ 20: </text>
+                <text class="people">{{item.userClass.cZero}}人</text></view>
+            </view>
+          </view>
+        </view>
+      </view>
+
+
+    </view>
+		
+	</view>
+</scroll-view>
+ 

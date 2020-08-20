@@ -10,6 +10,24 @@
     "navigationBarTitleText": "Owhat数据助手",
     "navigationBarTextStyle": "white"
   },
+  "tabBar": {
+    "color": "#707070",
+    "selectedColor": "#fe6a7a",
+    "list": [
+      {
+        "pagePath": "pages/search/index",
+        "text": "查询",
+        "iconPath": "icons/search.png",
+        "selectedIconPath": "icons/search-selected.png"
+      },
+      {
+        "pagePath": "pages/collection/index",
+        "text": "我的收藏",
+        "iconPath": "icons/collection.png",
+        "selectedIconPath": "icons/collection-selected.png"
+      }
+    ]
+  },
   "sitemapLocation": "sitemap.json",
   "style": "v2"
 }

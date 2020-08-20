@@ -33,8 +33,23 @@ input{
   padding-bottom: 15rpx;
   text-align: center;
 }
-.fan, .idol{
-  text-align: right;
+.info-subtitle{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.addCollection{
+  display: flex;
+  align-items: center;
+}
+.addCollectionText{
+  color: var(--progressColor);
+  margin-right: 10rpx;
+}
+.collection{
+  width: 60rpx;
+  height: 60rpx;
+  margin-right:25rpx;
 }
 .info-body{
   padding: 15rpx;

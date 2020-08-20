@@ -55,21 +55,8 @@
 			"list": [
 				{
 					"id": -1,
-					"name": "db guide",
-					"pathName": "pages/databaseGuide/databaseGuide",
-					"query": ""
-				},
-				{
-					"id": -1,
-					"name": "pages/finish/index",
-					"pathName": "pages/finish/index",
-					"query": "",
-					"scene": null
-				},
-				{
-					"id": -1,
-					"name": "pages/search/index",
-					"pathName": "pages/search/index",
+					"name": "pages/collection/index",
+					"pathName": "pages/collection/index",
 					"query": "",
 					"scene": null
 				}

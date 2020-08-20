@@ -38,6 +38,7 @@ Page({
     title: '',
     fanClub: '',
     status: '',
+    collected: false,
     log: []
   },
 
@@ -57,33 +58,30 @@ Page({
       })
     }else{
       this.setData({
-        btnDisable: true
+        btnDisable: true,
+        collected: false
       })
       wx.showLoading({
         title: '搜索中',
       })
-      const resGoodDb = await db.collection('goodDb').where({
-        goodId:goodId,
-        status: FINISH
-      }).get();
-      const goodDb = resGoodDb.data[0];
-      if (goodDb){
+      const storageData = wx.getStorageSync(goodId + '')
+      if (storageData){
         wx.hideLoading();
         this.setData({
           btnDisable: false,
-          goodId: goodDb.goodId,
-          startTime: goodDb.startTime,
-          endTime: goodDb.endTime,
-          localTime: goodDb.localTime,
-          salesItems: goodDb.salesItems,
-          money: goodDb.money,
-          userCount: goodDb.userCount,
-          average: goodDb.average,
-          userClass: goodDb.userClass,
-          star: goodDb.star,
-          title: goodDb.title,
-          fanClub: goodDb.fanClub,
-          status: goodDb.status
+          goodId: storageData.goodId,
+          startTime: storageData.startTime,
+          endTime: storageData.endTime,
+          localTime: storageData.localTime,
+          salesItems: storageData.salesItems,
+          money: storageData.money,
+          userCount: storageData.userCount,
+          average: storageData.average,
+          userClass: storageData.userClass,
+          star: storageData.star,
+          title: storageData.title,
+          fanClub: storageData.fanClub,
+          status: storageData.status
         })
         const d = new Date();
         const currentTime = d.getTime();
@@ -97,12 +95,49 @@ Page({
           }
         });
       }else{
-        wx.hideLoading();
-        wx.showToast({
-          title: '数据库中未存储或项目未结束，开始读取',
-          icon: "none"
-        });
-        await this.getGoodInfo(goodId);
+        const resGoodDb = await db.collection('goodDb').where({
+          goodId:goodId,
+          status: FINISH
+        }).get();
+        const goodDb = resGoodDb.data[0];
+        if (goodDb){
+          wx.hideLoading();
+          this.setData({
+            btnDisable: false,
+            goodId: goodDb.goodId,
+            startTime: goodDb.startTime,
+            endTime: goodDb.endTime,
+            localTime: goodDb.localTime,
+            salesItems: goodDb.salesItems,
+            money: goodDb.money,
+            userCount: goodDb.userCount,
+            average: goodDb.average,
+            userClass: goodDb.userClass,
+            star: goodDb.star,
+            title: goodDb.title,
+            fanClub: goodDb.fanClub,
+            status: goodDb.status
+          })
+          const d = new Date();
+          const currentTime = d.getTime();
+          wx.setStorageSync(goodDb.goodId + '', goodDb)
+          await db.collection('goodSearchHistory').add({
+            data: {
+              goodId:this.data.goodId,
+              timestamp: this.getLocalTime(currentTime),
+              title: this.data.title,
+              star: this.data.star,
+              money: this.data.money,
+            }
+          });
+        }else{
+          wx.hideLoading();
+          wx.showToast({
+            title: '数据库中未存储或项目未结束，开始读取',
+            icon: "none"
+          });
+          await this.getGoodInfo(goodId);
+        }
       }
     }
   },
@@ -376,6 +411,99 @@ Page({
       content:'在owhat某项目页面中，点击分享，选择复制链接，链接中的id=*******，即为此项目id。',
       showCancel:false
     })
+  },
+
+  collect(){
+    if (this.data.userCount != ''){
+      wx.showModal({
+        title: '添加收藏',
+        content: '确认收藏项目《' + this.data.title + '》？',
+        success: res => {
+          if (res.confirm){
+            this.collectGood(this.data.goodId);
+          }
+        }
+      })
+    }else {
+      wx.showToast({
+        title: '请先查询项目',
+        icon: "none"
+      })
+    }
+  },
+
+  async collectGood(goodId){
+    wx.showLoading({
+      title: '添加收藏中',
+    });
+    let userCollection = wx.getStorageSync('userCollection')
+    let openid = wx.getStorageSync('openid');;
+    let hasCount = false;
+    if (userCollection){
+      console.log('已存在本地')
+      hasCount = true;
+    }else{
+      console.log('未存在本地')
+      const resUser = await db.collection('user').where({
+        _openid: openid
+      }).get()
+      if (resUser.data.length > 0){
+        console.log('云端有账户')
+        userCollection = resUser.data[0].collection;
+        hasCount = true;
+      }else{
+        hasCount = false;
+      }
+    }
+
+    if (hasCount){
+      if (userCollection.findIndex( ele => ele.goodId == this.data.goodId) >= 0){
+        console.log('已收藏项目')
+        wx.hideLoading({
+          complete: (res) => {
+            wx.showToast({
+              title: '您之前已收藏此项目',
+              icon: "none"
+            })
+          },
+        })
+      }else {
+        console.log('未收藏项目')
+        userCollection.push({
+          goodId: this.data.goodId,
+          star: this.data.star,
+          title: this.data.title
+        })
+        await db.collection('user').doc(openid).update({
+          data: {
+            collection: userCollection
+          }
+        })
+        console.log('云端添加项目')
+      }
+    }else{
+      console.log('云端无账户')
+      userCollection = [{
+        goodId: this.data.goodId,
+        star: this.data.star,
+        title: this.data.title
+      }]
+      await db.collection('user').add({
+        data:{
+          _id: openid,
+          _openid: openid,
+          collection: userCollection
+        }
+      });
+      console.log('新增账户')
+    }
+
+    wx.setStorageSync('userCollection', userCollection)
+
+    this.setData({
+      collected: true
+    })
+    wx.hideLoading();
   }
 
 })

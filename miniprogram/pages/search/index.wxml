@@ -23,8 +23,18 @@
 
 		<view class="goodInfo">
 			<view class="info-title">{{title}}</view>
-			<view class="fan">{{fanClub}}</view>
-			<view class="idol">{{star}}</view>
+			<view class="info-subtitle">
+				<view class="fan">
+					<view class="fan">{{fanClub}}</view>
+					<view class="idol">{{star}}</view>
+				</view>
+				<view class="addCollection" >
+					<view class="addCollectionText" bindtap="collect">收藏</view>
+					<image wx:if="{{!collected}}" class="collection" src="../../icons/collection-selected.png" mode="aspectFit" bindtap="collect"></image>
+					<image wx:else class="collection" src="../../icons/collection-selected-full.png" mode="aspectFit"></image>
+				</view>
+			</view>
+
 			<view class="line"></view>
 			<view class="info-body">
 				<view class="time">
@@ -43,7 +53,7 @@
 				</view>
 				<view class="items">
 					<view class="title">商品详情：</view>
-					<view wx:for="{{salesItems}}">
+					<view wx:for="{{salesItems}}" wx:key="*this">
 						{{index+1}}. {{item.name}} (￥{{item.price}}) 售出 {{item.saleStock}} 件
 					</view>
 				</view>
