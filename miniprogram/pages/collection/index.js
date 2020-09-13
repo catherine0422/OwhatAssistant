@@ -404,7 +404,10 @@ Page({
   /**
    * 用户点击右上角分享
    */
-  onShareAppMessage: function () {
-
+  onShareAppMessage: function (res) {
+    return {
+      title: 'Owaht数据助手',
+      path: '/pages/collection/index'
+    }
   }
 })

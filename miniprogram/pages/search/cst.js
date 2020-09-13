@@ -1,4 +1,4 @@
-export const URL = 'https://m.owhat.cn/api';
+export const URL = 'https://appo4.owhat.cn/api';
 export const HEADER_GOODINTRO = {
   'Content-Type': 'application/x-www-form-urlencoded',
   'Accept': 'application/json',

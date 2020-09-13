@@ -197,6 +197,7 @@ Page({
         }
       })
       let goodIntro = resGoodIntro.data.data;
+      console.log(goodIntro);
       const d = new Date();
       const currentTime = d.getTime();
       let status = '';
@@ -504,6 +505,13 @@ Page({
       collected: true
     })
     wx.hideLoading();
+  },
+
+  onShareAppMessage: function (res) {
+    return {
+      title: 'Owaht数据助手',
+      path: '/pages/search/index'
+    }
   }
 
 })
