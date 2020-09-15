@@ -1,6 +1,4 @@
 // miniprogram/pages/search/index.js
-import {request} from "../../request/index";
-import {URL, HEADER_GOODINTRO, CLIENT_INFO} from "../search/cst";
 const FINISH = 'finish';
 const START = 'start';
 const NOT_START = 'not start';
@@ -46,7 +44,6 @@ Page({
    * 生命周期函数--监听页面加载
    */
   onLoad: async function (options) {
-    this.getLocalTime(1596022260000);
   },
 
   async formSubmit(e) {
@@ -64,310 +61,124 @@ Page({
       wx.showLoading({
         title: '搜索中',
       })
+      console.log('查询项目',goodId);
       const storageData = wx.getStorageSync(goodId + '')
+      const d = new Date();
+      const currentTime = d.getTime();
       if (storageData){
+        // 已结束项目，曾经查询过，存储在storagedata里
+        console.log('已结束项目，曾经查询过，存储在storagedata里');
         wx.hideLoading();
-        this.setData({
-          btnDisable: false,
-          goodId: storageData.goodId,
-          startTime: storageData.startTime,
-          endTime: storageData.endTime,
-          localTime: storageData.localTime,
-          salesItems: storageData.salesItems,
-          money: storageData.money,
-          userCount: storageData.userCount,
-          average: storageData.average,
-          userClass: storageData.userClass,
-          star: storageData.star,
-          title: storageData.title,
-          fanClub: storageData.fanClub,
-          status: storageData.status
-        })
-        const d = new Date();
-        const currentTime = d.getTime();
+        this.showGood(storageData)
         await db.collection('goodSearchHistory').add({
           data: {
-            goodId:this.data.goodId,
+            goodId:goodId,
             timestamp: this.getLocalTime(currentTime),
-            title: this.data.title,
-            star: this.data.star,
-            money: this.data.money,
+            title: storageData.title,
+            star: storageData.star,
+            money:storageData.money,
           }
         });
       }else{
         const resGoodDb = await db.collection('goodDb').where({
           goodId:goodId,
-          status: FINISH
         }).get();
         const goodDb = resGoodDb.data[0];
+        let needNewQuery = false; // 需要重新读取数据
         if (goodDb){
-          wx.hideLoading();
-          this.setData({
-            btnDisable: false,
-            goodId: goodDb.goodId,
-            startTime: goodDb.startTime,
-            endTime: goodDb.endTime,
-            localTime: goodDb.localTime,
-            salesItems: goodDb.salesItems,
-            money: goodDb.money,
-            userCount: goodDb.userCount,
-            average: goodDb.average,
-            userClass: goodDb.userClass,
-            star: goodDb.star,
-            title: goodDb.title,
-            fanClub: goodDb.fanClub,
-            status: goodDb.status
-          })
-          const d = new Date();
-          const currentTime = d.getTime();
-          wx.setStorageSync(goodDb.goodId + '', goodDb)
-          await db.collection('goodSearchHistory').add({
-            data: {
-              goodId:this.data.goodId,
-              timestamp: this.getLocalTime(currentTime),
-              title: this.data.title,
-              star: this.data.star,
-              money: this.data.money,
+          this.showGood(goodDb);
+          if (goodDb.status == FINISH){
+            wx.setStorageSync(goodDb.goodId + '', goodDb)
+            wx.hideLoading()
+          }else{
+            if (!goodDb.onQuery && goodDb.lastQueryTime){
+              // 并未正在查询， 且有最近更新时间
+              if(currentTime - goodDb.lastQueryTime > 60*1000*5){
+                // 距离上次查询时间大于5分钟
+                needNewQuery = true;
+                console.log('距上次查询大于五分钟，重新查询');
+              }else{
+                // 距离上次查询时间小于五分钟
+                wx.hideLoading()
+              }
+            }else{
+              // 正在查询中
+              wx.hideLoading()
+              wx.showModal({
+                content:'后台读取最新数据中，请稍等片刻。（若您未点击查询，则其他用户已查询此项目。根据项目人数，查询时间为10秒-2分钟。请稍等片刻，再次查询，即可查看最新数据。）',
+                showCancel:false
+              })
+              console.log('正在查询中');
             }
-          });
+          }
         }else{
-          wx.hideLoading();
-          wx.showToast({
-            title: '数据库中未存储或项目未结束，开始读取',
-            icon: "none"
+          console.log('未查询过，初次查询');
+          needNewQuery = true;
+        }
+        if(needNewQuery){
+          // 将状态更新为正在查询
+          if(goodDb){
+            await db.collection('goodDb').doc(goodDb._id).set({
+              data:{
+                onQuery: true,
+                goodId: goodId
+              }
+            })
+          }else{
+            await db.collection('goodDb').add({
+              data:{
+                _id: goodId,
+                goodId: goodId,
+                onQuery: true
+              }
+            })
+          }
+          wx.hideLoading()
+          this.setData({
+            btnDisable: false
+          })
+          wx.showModal({
+            content:'后台读取最新数据中，根据项目人数将耗时10秒-1分钟。请稍等片刻，再次查询，即可查看最新数据。',
+            showCancel:false
+          })
+          wx.cloud.callFunction({
+            name: 'getGoodInfo',
+            data: {
+              id : goodId
+            },
           });
-          await this.getGoodInfo(goodId);
         }
+        await db.collection('goodSearchHistory').add({
+          data: {
+            goodId:goodId,
+            timestamp: this.getLocalTime(currentTime),
+            title: goodDb.title,
+            star: goodDb.star,
+            money: goodDb.money,
+          }
+        });
       }
     }
   },
 
-  async getGoodInfo(id){
-    wx.showLoading({
-      mask:false,
-    })
-    await this.getGoodIntro(id);
-    await this.getSalesItems(id);
-    await this.getCount(id);
-    wx.showToast({
-      title: '读取完毕'
-    })
+  showGood(goodDb){
     this.setData({
-      log: []
+      btnDisable: false,
+      goodId: goodDb.goodId,
+      startTime: goodDb.startTime,
+      endTime: goodDb.endTime,
+      lastQueryTime: goodDb.lastQueryTime,
+      localTime: goodDb.localTime,
+      salesItems: goodDb.salesItems,
+      money: goodDb.money,
+      userCount: goodDb.userCount,
+      average: goodDb.average,
+      userClass: goodDb.userClass,
+      star: goodDb.star,
+      title: goodDb.title,
+      fanClub: goodDb.fanClub,
+      status: goodDb.status
     })
-    if (this.data.status == FINISH){
-      await db.collection('goodDb').add({
-        data: this.data
-      });
-    }
-    const d = new Date();
-    const currentTime = d.getTime();
-    await db.collection('goodSearchHistory').add({
-      data: {
-        goodId:this.data.goodId,
-        timestamp: this.getLocalTime(currentTime),
-        title: this.data.title,
-        star: this.data.star,
-        money: this.data.money,
-      }
-    });
-    this.setData({
-      btnDisable: false
-    })
-    wx.hideLoading()
-  },
-
-  async getGoodIntro(id){
-    try{
-      let log = this.data.log;
-      log.push('读取项目简介；');
-      this.setData({
-        log
-      })
-      let resGoodIntro = await request({
-        url: URL,
-        header: HEADER_GOODINTRO,
-        method: 'POST',
-        data: {
-          "client": CLIENT_INFO,
-          "cmd_m": 'findgoodsbyid',
-          "cmd_s": 'shop.goods',
-          "data": '{ "goodsid": '+ id +' }',
-          "v": '1.5.6L'
-        }
-      })
-      let goodIntro = resGoodIntro.data.data;
-      console.log(goodIntro);
-      const d = new Date();
-      const currentTime = d.getTime();
-      let status = '';
-      if (currentTime < goodIntro.salestartat){
-        status = NOT_START;
-      } else if (currentTime > goodIntro.saleendat){
-        status = FINISH;
-      }else{
-        status = START;
-      }
-      let star = '';
-      for (let goodStar of goodIntro.starlist){
-        star += goodStar.nickname;
-      }
-      let localTime = {
-        startTime: this.getLocalTime(goodIntro.salestartat),
-        endTime: this.getLocalTime(goodIntro.saleendat),
-        duration: this.getLocalTimeDiff(goodIntro.salestartat, goodIntro.saleendat),
-      }
-      this.setData({
-        goodId: goodIntro.goodsid,
-        startTime: goodIntro.salestartat,
-        endTime: goodIntro.saleendat,
-        star: goodIntro.starList,
-        title: goodIntro.title,
-        fanClub: goodIntro.owner.nickname,
-        status,
-        star,
-        localTime
-      })
-    }catch (e){
-      console.log(e);
-    }
-  },
-
-  async getSalesItems(id) {
-    try {
-      let log = this.data.log;
-      log.push('读取项目商品信息；');
-      this.setData({
-        log
-      })
-      let resSalesItems = await request({
-        url: URL,
-        header: HEADER_GOODINTRO,
-        method: 'POST',
-        data: {
-          "client": CLIENT_INFO,
-          "cmd_m": 'findPricesAndStock',
-          "cmd_s": 'shop.price',
-          "data": '{ "fk_goods_id": '+ id +' }',
-          "v": '1.5.6L'
-        }
-      })
-      const data = resSalesItems.data.data.prices;
-      const salesItems = [];
-      for (let item of data) {
-        salesItems.push({
-          name: item.name,
-          price: item.pricestr,
-          saleStock: item.salestock
-        })
-      }
-      this.setData({
-        salesItems
-      })
-    } catch (e) {
-      console.log(e);
-    }
-  },
-
-  async getCount(id, currentTime) {
-    try{
-      let log = this.data.log;
-      log.push('读取排名信息（一页100人）:');
-      this.setData({
-        log
-      })
-      let page = 1;
-      let userCount = 0;
-      let userClass = {
-        cThreeThousand: 0,
-        cThousand: 0,
-        cThreeHundred: 0,
-        cHundred: 0,
-        cFifty: 0,
-        cTwenty: 0,
-        cZero: 0
-      }
-      let money = 0;
-      while (true) {
-        let countPage = await this.getCountPage(id, page);
-        userCount += countPage.count;
-        money += countPage.money;
-        for (let key of Object.keys(userClass)){
-          userClass[key] += countPage.userClass[key];
-        }
-        if (countPage.count < 100) {
-          break;
-        }
-        page++;
-      }
-      this.setData({
-        userClass,
-        userCount,
-        money: money.toFixed(2),
-        average: (money/userCount).toFixed(2)
-      })
-    }catch(e){
-      console.log(e);
-    }
-  },
-
-  async getCountPage(id, page) {
-    try {
-      let log = this.data.log;
-      log.push('读取第'+page+'页');
-      this.setData({
-        log
-      })
-      let resCount = await request({
-        url: URL,
-        header: HEADER_GOODINTRO,
-        method: 'POST',
-        data: {
-          "client": CLIENT_INFO,
-          "cmd_m": 'findrankingbygoodsid',
-          "cmd_s": 'shop.goods',
-          "data": '{ "goodsid": '+ id +',"pagenum":'+page+',"pagesize": "100"}',
-          "v": '1.5.6L'
-        }
-      })
-      const data = resCount.data.data.rankinglist;
-      let money = 0;
-      let userClass = {
-        cThreeThousand: 0,
-        cThousand: 0,
-        cThreeHundred: 0,
-        cHundred: 0,
-        cFifty: 0,
-        cTwenty: 0,
-        cZero: 0
-      }
-      for (let user of data) {
-        let amount = parseFloat(user.amount)
-        money += amount;
-        if (amount >= 3000){
-          userClass.cThreeThousand++;
-        }else if (amount >= 1000){
-          userClass.cThousand++;
-        }else if (amount >= 300){
-          userClass.cThreeHundred++;
-        }else if (amount >= 100){
-          userClass.cHundred++;
-        }else if (amount >= 50){
-          userClass.cFifty++;
-        }else if (amount >= 20){
-          userClass.cTwenty++;
-        }else{
-          userClass.cZero++;
-        }
-      }
-      return {
-        count: data.length,
-        money,
-        userClass
-      }
-    } catch (e) {
-      console.log(e);
-    }
   },
 
   getLocalTime(nS) {

@@ -14,19 +14,25 @@
         <view class="info-maintitle">
           <view class="info-title">{{item.title}}</view>
           <view class="fan">
-            <view >{{item.fanClub}}</view>
             <view >{{item.star}}</view>
           </view>
         </view>
+        <view wx:if="{{item.localTime}}" class="info-hide-title">
+          <view>{{item.fanClub}}</view>
+          <view class="last-query-time" wx:if="{{item.status=='start' && item.lastQueryTime}}">
+          <text class="hint">数据截至：{{item.localTime.lastQueryTime}}(最短查询间隔五分钟)</text>
+          </view>
+        </view>
+
         <view class="info-subtitle">
           <view class="deleteCollection" >
             <image class="collection" src="../../icons/collection-selected-full.png" mode="aspectFit" bindtap="deleteCollection" data-idx="{{index}}"></image>
             <view class="deleteCollectionText" bindtap="deleteCollection" data-idx="{{index}}">取消收藏</view>
           </view>
-          <view class="showDetail" >
-            <view class="showDetailText" data-idx="{{index}}" bindtap="showDetail">显示详情</view>
-            <image class="chevron" wx:if="{{!item.localTime}}" src="../../icons/chevron.png" mode="aspectFit" data-idx="{{index}}" bindtap="showDetail"></image>
-            <image class="chevron" wx:else src="../../icons/chevron-inverse.png" mode="aspectFit" data-idx="{{index}}" bindtap="showDetail"></image>
+          <view class="showDetail" bindtap="showDetail">
+            <view class="showDetailText" data-idx="{{index}}">显示详情</view>
+            <image class="chevron" wx:if="{{!item.localTime}}" src="../../icons/chevron.png" mode="aspectFit" data-idx="{{index}}" ></image>
+            <image class="chevron" wx:else src="../../icons/chevron-inverse.png" mode="aspectFit" data-idx="{{index}}"></image>
           </view>
         </view>
 

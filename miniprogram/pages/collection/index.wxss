@@ -37,6 +37,9 @@ input{
   justify-content: space-between;
   align-items: center;
 }
+.info-hide-title{
+  margin-bottom: 15rpx;
+}
 .collection{
   width: 40rpx;
   height: 40rpx;

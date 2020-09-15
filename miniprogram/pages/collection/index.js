@@ -82,47 +82,109 @@ Page({
   async showDetail(e){
     const index = e.target.dataset.idx;
     if (!this.data.collection[index].localTime){
+      // 显示项目
       wx.showLoading({
         title: '读取详情',
       })
       const goodId = this.data.collection[index].goodId;
-      const storageData = wx.getStorageSync(goodId + '')
-      if (storageData){       
+      const storageData = wx.getStorageSync(goodId + '');
+      const d = new Date();
+      const currentTime = d.getTime();
+      if (storageData){
+        // 项目保存在storage中       
         let collection = this.data.collection;
         collection[index] = storageData;
         this.setData({
           collection: collection
         })
         wx.hideLoading();
-        const d = new Date();
-        const currentTime = d.getTime();
         await db.collection('goodSearchHistory').add({
           data: {
-            goodId:this.data.goodId,
+            goodId:goodId,
             timestamp: this.getLocalTime(currentTime),
-            title: this.data.title,
-            star: this.data.star,
-            money: this.data.money,
+            title: storageData.title,
+            star: storageData.star,
+            money: storageData.money,
           }
         });
       }else{
-        const resGood = await db.collection('goodDb').where({
+        const resGoodDb = await db.collection('goodDb').where({
           goodId:goodId
         }).get()
-        if (resGood.data.length >0){
-          const goodInfo = resGood.data[0];
-          let collection = this.data.collection;
-          collection[index] = goodInfo;
-          this.setData({
-            collection: collection
-          })
-          wx.setStorageSync(goodId + '', goodInfo)
+        const goodDb = resGoodDb.data[0];
+        let needNewQuery = false; // 需要重新读取数据
+        if (goodDb){
+          this.showGood(goodDb, index);
+          if (goodDb.status == FINISH){
+            wx.setStorageSync(goodDb.goodId + '', goodDb)
+            wx.hideLoading()
+          }else{
+            if (!goodDb.onQuery && goodDb.lastQueryTime){
+              // 并未正在查询， 且有最近更新时间
+              if(currentTime - goodDb.lastQueryTime > 60*1000*5){
+                // 距离上次查询时间大于5分钟
+                needNewQuery = true;
+                console.log('距上次查询大于五分钟，重新查询');
+              }else{
+                // 距离上次查询时间小于五分钟
+                wx.hideLoading()
+              }
+            }else{
+              // 正在查询中
+              wx.hideLoading()
+              wx.showModal({
+                content:'后台读取最新数据中，请稍等片刻。（若您未点击查询，则其他用户已查询此项目。根据项目人数，查询时间为10秒-2分钟。请稍等片刻，再次查询，即可查看最新数据。）',
+                showCancel:false
+              })
+              console.log('正在查询中');
+            }
+          }
         }else{
-          this.getGoodInfo(index);
+          console.log('未查询过，初次查询');
+          needNewQuery = true;
         }
-        wx.hideLoading()
+        if(needNewQuery){
+          // 将状态更新为正在查询
+          if(goodDb){
+            await db.collection('goodDb').doc(goodDb._id).set({
+              data:{
+                onQuery: true,
+                goodId: goodId
+              }
+            })
+          }else{
+            await db.collection('goodDb').add({
+              data:{
+                _id: goodId,
+                goodId: goodId,
+                onQuery: true
+              }
+            })
+          }
+          wx.hideLoading()
+          wx.showModal({
+            content:'后台读取最新数据中，根据项目人数将耗时10秒-1分钟。请稍等片刻，再次查询，即可查看最新数据。',
+            showCancel:false
+          })
+          wx.cloud.callFunction({
+            name: 'getGoodInfo',
+            data: {
+              id : goodId
+            },
+          });
+        }
+        await db.collection('goodSearchHistory').add({
+          data: {
+            goodId:goodId,
+            timestamp: this.getLocalTime(currentTime),
+            title: goodDb.title,
+            star: goodDb.star,
+            money: goodDb.money,
+          }
+        });
       }
     }else{
+      // 收起项目
       let collection = this.data.collection;
       delete collection[index].localTime;
       this.setData({
@@ -132,237 +194,27 @@ Page({
 
   },
 
-  async getGoodInfo(index){
-    const id = this.data.collection[index].goodId;
-    wx.showLoading({
-      mask:false,
-    })
-    await this.getGoodIntro(index,id);
-    await this.getSalesItems(index,id);
-    await this.getCount(index,id);
-    wx.showToast({
-      title: '读取完毕'
-    })
+  showGood(goodDb, index){
     let collection = this.data.collection;
-    collection[index].log=[];
+    collection[index] = {
+      goodId: goodDb.goodId,
+      startTime: goodDb.startTime,
+      endTime: goodDb.endTime,
+      lastQueryTime: goodDb.lastQueryTime,
+      localTime: goodDb.localTime,
+      salesItems: goodDb.salesItems,
+      money: goodDb.money,
+      userCount: goodDb.userCount,
+      average: goodDb.average,
+      userClass: goodDb.userClass,
+      star: goodDb.star,
+      title: goodDb.title,
+      fanClub: goodDb.fanClub,
+      status: goodDb.status
+    };
     this.setData({
       collection: collection
     })
-    if (this.data.status == FINISH){
-      await db.collection('goodDb').add({
-        data: this.data.collection[index]
-      });
-    }
-    const d = new Date();
-    const currentTime = d.getTime();
-    await db.collection('goodSearchHistory').add({
-      data: {
-        goodId:this.data.collection[index].goodId,
-        timestamp: this.getLocalTime(currentTime),
-        title: this.data.collection[index].title,
-        star: this.data.collection[index].star,
-        money: this.data.collection[index].money,
-      }
-    });
-    wx.hideLoading()
-  },
-
-  async getGoodIntro(index,id){
-    try{
-      let collection = this.data.collection;
-      collection[index].log=['读取项目简介；'];
-      this.setData({
-        collection: collection
-      })
-      let resGoodIntro = await request({
-        url: URL,
-        header: HEADER_GOODINTRO,
-        method: 'POST',
-        data: {
-          "client": CLIENT_INFO,
-          "cmd_m": 'findgoodsbyid',
-          "cmd_s": 'shop.goods',
-          "data": '{ "goodsid": '+ id +' }',
-          "v": '1.5.6L'
-        }
-      })
-      wx.showLoading({
-        mask:false,
-      })
-      let goodIntro = resGoodIntro.data.data;
-      const d = new Date();
-      const currentTime = d.getTime();
-      let status = '';
-      if (currentTime < goodIntro.salestartat){
-        status = NOT_START;
-      } else if (currentTime > goodIntro.saleendat){
-        status = FINISH;
-      }else{
-        status = START;
-      }
-      let star = '';
-      for (let goodStar of goodIntro.starlist){
-        star += goodStar.nickname;
-      }
-      let localTime = {
-        startTime: this.getLocalTime(goodIntro.salestartat),
-        endTime: this.getLocalTime(goodIntro.saleendat),
-        duration: this.getLocalTimeDiff(goodIntro.salestartat, goodIntro.saleendat),
-      }
-      collection[index].goodId = goodIntro.goodsid
-      collection[index].startTime= goodIntro.salestartat
-      collection[index].endTime= goodIntro.saleendat
-      collection[index].star= goodIntro.starList
-      collection[index].title= goodIntro.title
-      collection[index].fanClub= goodIntro.owner.nickname
-      collection[index].status = status
-      collection[index].star = star
-      collection[index].localTime = localTime
-      this.setData({
-        collection: collection
-      })
-    }catch (e){
-      console.log(e);
-    }
-  },
-
-  async getSalesItems(index,id) {
-    try {
-      let collection = this.data.collection;
-      collection[index].log.push('读取项目商品信息；');
-      this.setData({
-        collection: collection
-      })
-      let resSalesItems = await request({
-        url: URL,
-        header: HEADER_GOODINTRO,
-        method: 'POST',
-        data: {
-          "client": CLIENT_INFO,
-          "cmd_m": 'findPricesAndStock',
-          "cmd_s": 'shop.price',
-          "data": '{ "fk_goods_id": '+ id +' }',
-          "v": '1.5.6L'
-        }
-      })
-      const data = resSalesItems.data.data.prices;
-      const salesItems = [];
-      for (let item of data) {
-        salesItems.push({
-          name: item.name,
-          price: item.pricestr,
-          saleStock: item.salestock
-        })
-      }
-      collection[index].salesItems = salesItems;
-      this.setData({
-        collection: collection
-      })
-    } catch (e) {
-      console.log(e);
-    }
-  },
-
-  async getCount(index,id) {
-    try{
-      let collection = this.data.collection;
-      collection[index].log.push('读取排名信息（一页100人）');
-      this.setData({
-        collection: collection
-      })
-      let page = 1;
-      let userCount = 0;
-      let userClass = {
-        cThreeThousand: 0,
-        cThousand: 0,
-        cThreeHundred: 0,
-        cHundred: 0,
-        cFifty: 0,
-        cTwenty: 0,
-        cZero: 0
-      }
-      let money = 0;
-      while (true) {
-        let countPage = await this.getCountPage(index, id, page);
-        userCount += countPage.count;
-        money += countPage.money;
-        for (let key of Object.keys(userClass)){
-          userClass[key] += countPage.userClass[key];
-        }
-        if (countPage.count < 100) {
-          break;
-        }
-        page++;
-      }
-      collection[index].userClass = userClass
-      collection[index].userCount = userCount
-      collection[index].money = money.toFixed(2)
-      collection[index].average = (money/userCount).toFixed(2)
-      this.setData({
-        collection: collection
-      })
-    }catch(e){
-      console.log(e);
-    }
-  },
-
-  async getCountPage(index, id, page) {
-    try {
-      let collection = this.data.collection;
-      collection[index].log.push('读取第'+page+'页');
-      this.setData({
-        collection: collection
-      })
-      let resCount = await request({
-        url: URL,
-        header: HEADER_GOODINTRO,
-        method: 'POST',
-        data: {
-          "client": CLIENT_INFO,
-          "cmd_m": 'findrankingbygoodsid',
-          "cmd_s": 'shop.goods',
-          "data": '{ "goodsid": '+ id +',"pagenum":'+page+',"pagesize": "100"}',
-          "v": '1.5.6L'
-        }
-      })
-      const data = resCount.data.data.rankinglist;
-      let money = 0;
-      let userClass = {
-        cThreeThousand: 0,
-        cThousand: 0,
-        cThreeHundred: 0,
-        cHundred: 0,
-        cFifty: 0,
-        cTwenty: 0,
-        cZero: 0
-      }
-      for (let user of data) {
-        let amount = parseFloat(user.amount)
-        money += amount;
-        if (amount >= 3000){
-          userClass.cThreeThousand++;
-        }else if (amount >= 1000){
-          userClass.cThousand++;
-        }else if (amount >= 300){
-          userClass.cThreeHundred++;
-        }else if (amount >= 100){
-          userClass.cHundred++;
-        }else if (amount >= 50){
-          userClass.cFifty++;
-        }else if (amount >= 20){
-          userClass.cTwenty++;
-        }else{
-          userClass.cZero++;
-        }
-      }
-      return {
-        count: data.length,
-        money,
-        userClass
-      }
-    } catch (e) {
-      console.log(e);
-    }
   },
 
   getLocalTime(nS) {

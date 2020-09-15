@@ -34,6 +34,9 @@
 					<image wx:else class="collection" src="../../icons/collection-selected-full.png" mode="aspectFit"></image>
 				</view>
 			</view>
+			<view class="last-query-time" wx:if="{{status=='start' && lastQueryTime}}">
+			<text class="hint">数据截至：{{localTime.lastQueryTime}}(最短查询间隔五分钟)</text>
+			</view>
 
 			<view class="line"></view>
 			<view class="info-body">
