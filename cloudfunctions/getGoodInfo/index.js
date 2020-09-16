@@ -1,7 +1,9 @@
 // 云函数入口文件
 const cloud = require('wx-server-sdk')
 const axios = require('axios');
-cloud.init()
+cloud.init({
+  env: cloud.DYNAMIC_CURRENT_ENV
+})
 
 const db = cloud.database()
 const _ = db.command
@@ -10,6 +12,9 @@ const url = "http://appo4.owhat.cn/api";
 const NOT_START = 'not start';
 const FINISH = 'finish';
 const START = 'start';
+
+// 由于60秒限制，每次读取前 200*100 人
+const SCOLE = 200;
 
 const headers = { 'Host': 'appo4.owhat.cn',
 'Content-Type': 'application/x-www-form-urlencoded',
@@ -31,6 +36,7 @@ exports.main = async (event, context) => {
     console.log('items:', salesItems);
     let count = await getCount(id);
     console.log('count', count);
+    onQuery = !count.isFinish;
     await db.collection('goodDb').doc(id).set({
       data: {
         goodId: goodIntro.goodId,
@@ -48,9 +54,21 @@ exports.main = async (event, context) => {
         money: count.money,
         average: count.average,
         salesItems,
-        onQuery: false
+        onQuery
       }
     });
+    if (!count.isFinish){
+      // 未完成，则调用云函数读取下一个200*100人
+      cloud.callFunction({
+        name:'getGoodInfoPage',
+        data:{
+          id:id,
+          money:count.money,
+          userCount:count.userCount,
+          index:1
+        }
+      });
+    }
     return{
       event
     }
@@ -126,6 +144,7 @@ async function getCount(id) {
       cZero: 0
     }
     let money = 0;
+    isFinish = true;
     while (true) {
       let countPage = await getCountPage(id, page);
       userCount += countPage.count;
@@ -136,13 +155,19 @@ async function getCount(id) {
       if (countPage.count < 100) {
         break;
       }
+      if (page >= SCOLE){
+        // 大于200页， 分批读取
+        isFinish = false;
+        break;
+      }
       page++;
     }
     const dataCount = {
       userClass,
       userCount,
       money: money.toFixed(2),
-      average: (money/userCount).toFixed(2)
+      average: (money/userCount).toFixed(2),
+      isFinish
     }
     return dataCount;
 }

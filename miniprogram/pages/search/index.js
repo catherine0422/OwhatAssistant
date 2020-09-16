@@ -99,6 +99,7 @@ Page({
                 console.log('距上次查询大于五分钟，重新查询');
               }else{
                 // 距离上次查询时间小于五分钟
+                console.log('距上次查询小于五分钟');
                 wx.hideLoading()
               }
             }else{
@@ -141,6 +142,7 @@ Page({
             content:'后台读取最新数据中，根据项目人数将耗时10秒-1分钟。请稍等片刻，再次查询，即可查看最新数据。',
             showCancel:false
           })
+          console.log('查询')
           wx.cloud.callFunction({
             name: 'getGoodInfo',
             data: {
