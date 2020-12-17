@@ -1,7 +1,7 @@
 <!--miniprogram/pages/collection/index.wxml-->
 <scroll-view scroll-y="true">
 	<view class="root">
-
+    <ad unit-id="adunit-00405f53a96b914f" ad-intervals="30"></ad>
     <view class="goodInfos" wx:for="{{collection}}" wx:key="index">
       <view class="log" wx:if="{{item.log.length>0}}">
         <text class="log-title">运行日志：</text>
@@ -53,9 +53,15 @@
             </view>
           </view>
           <view class="items" >
-            <view class="title">商品详情：</view>
-            <view wx:for="{{item.salesItems}}" wx:key="saleIdx" wx:for-item="saleItem" wx:for-index="saleIdx">
-              {{saleIdx+1}}. {{saleItem.name}} (￥{{saleItem.price}}) 售出 {{saleItem.saleStock}} 件
+            <view class="items-title" bindtap="toggleItems" data-idx="{{index}}">
+              <text>商品详情：</text>
+              <image class="chevron" wx:if="{{!item.showItems}}" src="../../icons/chevron.png" mode="aspectFit" ></image>
+              <image class="chevron" wx:else src="../../icons/chevron-inverse.png" mode="aspectFit"></image>
+            </view>
+					  <view class="body" wx:if="{{item.showItems}}">            
+              <view wx:for="{{item.salesItems}}" wx:key="saleIdx" wx:for-item="saleItem" wx:for-index="saleIdx">
+                {{saleIdx+1}}. {{saleItem.name}} (￥{{saleItem.price}}) 售出 {{saleItem.saleStock}} 件
+              </view>
             </view>
           </view>
           <view class="line line2" ></view>
@@ -74,10 +80,12 @@
             </view>
           </view>
           <view class="userClass">
-            <view class="title">
-              区间人数：
+            <view class="userClass-title" bindtap="toggleClass" data-idx="{{index}}">
+              <text>区间人数：</text>
+              <image class="chevron" wx:if="{{!item.showClass}}" src="../../icons/chevron.png" mode="aspectFit" ></image>
+              <image class="chevron" wx:else src="../../icons/chevron-inverse.png" mode="aspectFit"></image>	
             </view>
-            <view class="body">
+            <view class="body" wx:if="{{item.showClass}}">
               <view wx:if="{{item.userClass.cThreeThousand>0}}">
                 <text>3000以上：</text>
                 <text class="people">{{item.userClass.cThreeThousand}}人</text>

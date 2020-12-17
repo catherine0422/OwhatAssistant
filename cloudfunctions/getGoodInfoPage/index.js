@@ -26,43 +26,33 @@ const headers = { 'Host': 'appo4.owhat.cn',
  
 // 云函数入口函数
 exports.main = async (event, context) => {
-  let {id, index, money, userCount} = event;
+  let {id, index, count} = event;
   // 以2万为界，超过则分批读取
-  money = parseFloat(money);
+  count.money = parseFloat(count.money);
   console.log('读取id：', id);
   console.log('第几个2万', index);
   try{
-    let count = await getCount(id, index);
-    console.log('count', count);
-    money_cur = money + count.money;
-    userCount_cur = userCount + count.userCount;
-    onQuery = !count.isFinish
-    await db.collection('goodDb').doc(id).update({
-      data: {
-        money: money_cur.toFixed(2),
-        average: (money_cur/userCount_cur).toFixed(2),
-        userCount: userCount_cur,
-        userClass: {
-          cThreeThousand: _.inc(count.userClass.cThreeThousand),
-          cThousand: _.inc(count.userClass.cThousand),
-          cThreeHundred: _.inc(count.userClass.cThreeHundred),
-          cHundred: _.inc(count.userClass.cHundred),
-          cFifty: _.inc(count.userClass.cFifty),
-          cTwenty: _.inc(count.userClass.cTwenty),
-          cZero: _.inc(count.userClass.cZero)
-        },
-        onQuery: onQuery
-      }
-    });
-    if (!count.isFinish){
+    let newCount = await getCount(id, index, count);
+    console.log('count', newCount);
+    onQuery = !newCount.isFinish;
+    if (newCount.isFinish){
+      await db.collection('goodDb').doc(id).update({
+        data: {
+          userClass: newCount.userClass,
+          userCount: newCount.userCount,
+          money: newCount.money,
+          average: newCount.average,
+          onQuery
+        }
+      });
+    } else{
       // 大于200页，分批读取
       cloud.callFunction({
         name:'getGoodInfoPage',
         data:{
           index:index + 1,
-          id: id,
-          money: money_cur.toFixed(2),
-          userCount: userCount_cur
+          id:id,
+          count:newCount,
         }
       })
     }
@@ -77,20 +67,12 @@ exports.main = async (event, context) => {
 
 }
 
-async function getCount(id, index) {
+async function getCount(id, index, count) {
     // 从201页开始读取
     let page = index*SCOLE + 1;
-    let userCount = 0;
-    let userClass = {
-      cThreeThousand: 0,
-      cThousand: 0,
-      cThreeHundred: 0,
-      cHundred: 0,
-      cFifty: 0,
-      cTwenty: 0,
-      cZero: 0
-    }
-    let money = 0;
+    let userCount = count.userCount;
+    let userClass = count.userClass;
+    let money = count.money;
     isFinish = true;
     while (true) {
       let countPage = await getCountPage(id, page);
@@ -112,7 +94,8 @@ async function getCount(id, index) {
     let dataCount = {
       userClass,
       userCount,
-      money: money,
+      money: money.toFixed(2),
+      average: (money/userCount).toFixed(2),
       isFinish:true
     }
     if(!isFinish){

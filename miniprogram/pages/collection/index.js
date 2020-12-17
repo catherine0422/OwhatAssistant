@@ -2,8 +2,13 @@
 import {request} from "../../request/index";
 import {URL, HEADER_GOODINTRO, CLIENT_INFO} from "../search/cst";
 const FINISH = 'finish';
-const START = 'start';
-const NOT_START = 'not start';
+const TYPE_LARGER_FIVE = 1;
+const TYPE_SMALLER_FIVE = 2;
+const TYPE_STORED = 3;
+const TYPE_FINISH = 4;
+const TYPE_ON_QUERY = 5;
+const TYPE_FIRST_QUERY = 6;
+
 const db = wx.cloud.database()
 const _ = db.command
 Page({
@@ -79,6 +84,32 @@ Page({
     wx.hideLoading()
   },
 
+  toggleItems(e){
+    const index = e.currentTarget.dataset.idx;
+    let collection = this.data.collection;
+    if(!collection[index].showItems){
+      collection[index].showItems = true;
+    }else{
+      collection[index].showItems = false;
+    }
+    this.setData({
+      collection
+    })
+  },
+
+  toggleClass(e){
+    const index = e.currentTarget.dataset.idx;
+    let collection = this.data.collection;
+    if(!collection[index].showClass){
+      collection[index].showClass = true;
+    }else{
+      collection[index].showClass = false;
+    }
+    this.setData({
+      collection
+    })
+  },
+
   async showDetail(e){
     const index = e.target.dataset.idx;
     if (!this.data.collection[index].localTime){
@@ -89,50 +120,58 @@ Page({
       const goodId = this.data.collection[index].goodId;
       const storageData = wx.getStorageSync(goodId + '');
       const d = new Date();
-      const currentTime = d.getTime();
+      let currentTime = d.getTime();
       if (storageData){
-        // 项目保存在storage中       
+        // 已结束项目，曾经查询过，存储在storagedata里
+        console.log('已结束项目，曾经查询过，存储在storagedata里');
+        wx.hideLoading();
         let collection = this.data.collection;
         collection[index] = storageData;
         this.setData({
           collection: collection
         })
-        wx.hideLoading();
         await db.collection('goodSearchHistory').add({
           data: {
             goodId:goodId,
             timestamp: this.getLocalTime(currentTime),
             title: storageData.title,
             star: storageData.star,
-            money: storageData.money,
+            money:storageData.money,
+            type: TYPE_STORED,
           }
         });
       }else{
         const resGoodDb = await db.collection('goodDb').where({
-          goodId:goodId
-        }).get()
+          goodId:goodId,
+        }).get();
         const goodDb = resGoodDb.data[0];
         let needNewQuery = false; // 需要重新读取数据
+        let type;
         if (goodDb){
           this.showGood(goodDb, index);
-          if (goodDb.status == FINISH){
+          if (!goodDb.onQuery && goodDb.status == FINISH){
             wx.setStorageSync(goodDb.goodId + '', goodDb)
+            type = TYPE_FINISH;
             wx.hideLoading()
           }else{
             if (!goodDb.onQuery && goodDb.lastQueryTime){
               // 并未正在查询， 且有最近更新时间
-              if(currentTime - goodDb.lastQueryTime > 60*1000*5){
+              currentTime = d.getTime();
+              if( currentTime - goodDb.lastQueryTime > 60*1000*5){
                 // 距离上次查询时间大于5分钟
                 needNewQuery = true;
                 console.log('距上次查询大于五分钟，重新查询');
+                type = TYPE_LARGER_FIVE;
               }else{
                 // 距离上次查询时间小于五分钟
-                console.log('距上次查询小于五分钟')
+                console.log('距上次查询小于五分钟');
+                type = TYPE_SMALLER_FIVE;
                 wx.hideLoading()
               }
             }else{
               // 正在查询中
               wx.hideLoading()
+              type = TYPE_ON_QUERY;
               wx.showModal({
                 content:'后台读取最新数据中，请稍等片刻。（若您未点击查询，则其他用户已查询此项目。根据项目人数，查询时间为10秒-2分钟。请稍等片刻，再次查询，即可查看最新数据。）',
                 showCancel:false
@@ -142,6 +181,7 @@ Page({
           }
         }else{
           console.log('未查询过，初次查询');
+          type = TYPE_FIRST_QUERY;
           needNewQuery = true;
         }
         if(needNewQuery){
@@ -163,6 +203,9 @@ Page({
             })
           }
           wx.hideLoading()
+          this.setData({
+            btnDisable: false
+          })
           wx.showModal({
             content:'后台读取最新数据中，根据项目人数将耗时10秒-1分钟。请稍等片刻，再次查询，即可查看最新数据。',
             showCancel:false
@@ -175,16 +218,36 @@ Page({
             },
           });
         }
-        await db.collection('goodSearchHistory').add({
-          data: {
-            goodId:goodId,
-            timestamp: this.getLocalTime(currentTime),
-            title: goodDb.title,
-            star: goodDb.star,
-            money: goodDb.money,
-          }
-        });
+
+        if(goodDb){
+          // 之前有搜过
+          await db.collection('goodSearchHistory').add({
+            data: {
+              goodId:goodId,
+              timestamp: currentTime,
+              localTime:this.getLocalTime(currentTime),
+              lastQueryTime: goodDb.lastQueryTime,
+              title: goodDb.title,
+              star: goodDb.star,
+              money: goodDb.money,
+              type,
+            }
+          });
+        }else{
+          // 第一次搜索
+          await db.collection('goodSearchHistory').add({
+            data: {
+              goodId:goodId,
+              timestamp: currentTime,
+              localTime:this.getLocalTime(currentTime),
+              type,
+            }
+          });
+        }
+
+
       }
+
     }else{
       // 收起项目
       let collection = this.data.collection;
@@ -218,6 +281,7 @@ Page({
       collection: collection
     })
   },
+
 
   getLocalTime(nS) {
     let time = new Date(parseInt(nS));

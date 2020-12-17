@@ -9,11 +9,13 @@
 				</view>
 				<text class="hint">注：只能读取owhat公开项目，隐藏的项目（只显示前十名）以及下架的项目都无法读取。</text>
 				<view class="btn-aria">
-					<button type="primary" formType="submit" disabled="{{btnDisable}}">查询</button>
+					<button class="submit" type="primary" formType="submit" disabled="{{btnDisable}}">查询</button>
 				</view>
 			</form>
 		</view>
-
+	
+		<ad unit-id="adunit-f2be5edaf480ec8c" ad-intervals="30"></ad>
+		
 		<view class="log" wx:if="{{log.length>0}}">
 			<text class="log-title">运行日志：</text>
 			<view class="log-item" wx:for="{{log}}" wx:key="*this">
@@ -54,10 +56,16 @@
 						<view class="number">{{localTime.duration}}</view>
 					</view>
 				</view>
-				<view class="items">
-					<view class="title">商品详情：</view>
-					<view wx:for="{{salesItems}}" wx:key="*this">
-						{{index+1}}. {{item.name}} (￥{{item.price}}) 售出 {{item.saleStock}} 件
+				<view class="items" bindtap="toggleItems">
+					<view class="items-title">
+					<text>商品详情：</text>
+					<image class="chevron" wx:if="{{!showItems}}" src="../../icons/chevron.png" mode="aspectFit" ></image>
+					<image class="chevron" wx:else src="../../icons/chevron-inverse.png" mode="aspectFit"></image>
+					</view> 
+					<view class="body" wx:if="{{showItems}}">
+						<view  wx:for="{{salesItems}}" wx:key="*this">
+							{{index+1}}. {{item.name}} (￥{{item.price}}) 售出 {{item.saleStock}} 件
+						</view>
 					</view>
 				</view>
 				<view class="line line2"></view>
@@ -75,11 +83,13 @@
 						<view class="money">￥{{average}}</view>
 					</view>
 				</view>
-				<view class="userClass">
-					<view class="title">
-						区间人数：
+				<view class="userClass" bindtap="toggleClass">
+					<view class="userClass-title">
+						<text>区间人数：</text>
+						<image class="chevron" wx:if="{{!showClass}}" src="../../icons/chevron.png" mode="aspectFit" ></image>
+						<image class="chevron" wx:else src="../../icons/chevron-inverse.png" mode="aspectFit"></image>	
 					</view>
-					<view class="body">
+					<view class="body" wx:if="{{showClass}}">
 						<view wx:if="{{userClass.cThreeThousand>0}}">
 							<text>3000以上：</text>
 							<text class="people">{{userClass.cThreeThousand}}人</text>

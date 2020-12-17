@@ -37,34 +37,62 @@ exports.main = async (event, context) => {
     let count = await getCount(id);
     console.log('count', count);
     onQuery = !count.isFinish;
-    await db.collection('goodDb').doc(id).set({
-      data: {
-        goodId: goodIntro.goodId,
-        startTime: goodIntro.startTime,
-        endTime: goodIntro.endTime,
-        lastQueryTime: goodIntro.lastQueryTime,
-        star: goodIntro.star,
-        title: goodIntro.title,
-        fanClub: goodIntro.fanClub,
-        status: goodIntro.status,
-        star: goodIntro.star,
-        localTime: goodIntro.localTime,
-        userClass: count.userClass,
-        userCount: count.userCount,
-        money: count.money,
-        average: count.average,
-        salesItems,
-        onQuery
-      }
-    });
-    if (!count.isFinish){
+    if (count.isFinish){
+      await db.collection('goodDb').doc(id).set({
+        data: {
+          goodId: goodIntro.goodId,
+          startTime: goodIntro.startTime,
+          endTime: goodIntro.endTime,
+          lastQueryTime: goodIntro.lastQueryTime,
+          star: goodIntro.star,
+          title: goodIntro.title,
+          fanClub: goodIntro.fanClub,
+          status: goodIntro.status,
+          star: goodIntro.star,
+          localTime: goodIntro.localTime,
+          userClass: count.userClass,
+          userCount: count.userCount,
+          money: count.money,
+          average: count.average,
+          salesItems,
+          onQuery
+        }
+      });
+    }else{
       // 未完成，则调用云函数读取下一个200*100人
+      await db.collection('goodDb').doc(id).set({
+        data: {
+          goodId: goodIntro.goodId,
+          startTime: goodIntro.startTime,
+          endTime: goodIntro.endTime,
+          lastQueryTime: goodIntro.lastQueryTime,
+          star: goodIntro.star,
+          title: goodIntro.title,
+          fanClub: goodIntro.fanClub,
+          status: goodIntro.status,
+          star: goodIntro.star,
+          localTime: goodIntro.localTime,
+          userClass: {
+            cThreeThousand: 0,
+            cThousand: 0,
+            cThreeHundred: 0,
+            cHundred: 0,
+            cFifty: 0,
+            cTwenty: 0,
+            cZero: 0
+          },
+          userCount: '...',
+          money: '...',
+          average: '...',
+          salesItems,
+          onQuery
+        }
+      });
       cloud.callFunction({
         name:'getGoodInfoPage',
         data:{
           id:id,
-          money:count.money,
-          userCount:count.userCount,
+          count:count,
           index:1
         }
       });

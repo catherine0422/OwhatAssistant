@@ -2,6 +2,14 @@
 const FINISH = 'finish';
 const START = 'start';
 const NOT_START = 'not start';
+
+const TYPE_LARGER_FIVE = 1;
+const TYPE_SMALLER_FIVE = 2;
+const TYPE_STORED = 3;
+const TYPE_FINISH = 4;
+const TYPE_ON_QUERY = 5;
+const TYPE_FIRST_QUERY = 6;
+
 const db = wx.cloud.database()
 const _ = db.command
 Page({
@@ -10,6 +18,8 @@ Page({
    * 页面的初始数据
    */
   data: {
+    showItems: false,
+    showUserClass:false,
     btnDisable: false,
     goodId: '',
     startTime: '',
@@ -64,7 +74,7 @@ Page({
       console.log('查询项目',goodId);
       const storageData = wx.getStorageSync(goodId + '')
       const d = new Date();
-      const currentTime = d.getTime();
+      let currentTime = d.getTime();
       if (storageData){
         // 已结束项目，曾经查询过，存储在storagedata里
         console.log('已结束项目，曾经查询过，存储在storagedata里');
@@ -77,7 +87,13 @@ Page({
             title: storageData.title,
             star: storageData.star,
             money:storageData.money,
+            type: TYPE_STORED,
           }
+        });
+        wx.reportAnalytics('query_in_search', {
+          search_id: goodId,
+          search_star: storageData.star,
+          search_title: storageData.title,
         });
       }else{
         const resGoodDb = await db.collection('goodDb').where({
@@ -85,26 +101,32 @@ Page({
         }).get();
         const goodDb = resGoodDb.data[0];
         let needNewQuery = false; // 需要重新读取数据
+        let type;
         if (goodDb){
           this.showGood(goodDb);
-          if (goodDb.status == FINISH){
+          if (!goodDb.onQuery && goodDb.status == FINISH){
             wx.setStorageSync(goodDb.goodId + '', goodDb)
+            type = TYPE_FINISH;
             wx.hideLoading()
           }else{
             if (!goodDb.onQuery && goodDb.lastQueryTime){
               // 并未正在查询， 且有最近更新时间
-              if(currentTime - goodDb.lastQueryTime > 60*1000*5){
+              currentTime = d.getTime();
+              if( currentTime - goodDb.lastQueryTime > 60*1000*5){
                 // 距离上次查询时间大于5分钟
                 needNewQuery = true;
                 console.log('距上次查询大于五分钟，重新查询');
+                type = TYPE_LARGER_FIVE;
               }else{
                 // 距离上次查询时间小于五分钟
                 console.log('距上次查询小于五分钟');
+                type = TYPE_SMALLER_FIVE;
                 wx.hideLoading()
               }
             }else{
               // 正在查询中
               wx.hideLoading()
+              type = TYPE_ON_QUERY;
               wx.showModal({
                 content:'后台读取最新数据中，请稍等片刻。（若您未点击查询，则其他用户已查询此项目。根据项目人数，查询时间为10秒-2分钟。请稍等片刻，再次查询，即可查看最新数据。）',
                 showCancel:false
@@ -114,6 +136,7 @@ Page({
           }
         }else{
           console.log('未查询过，初次查询');
+          type = TYPE_FIRST_QUERY;
           needNewQuery = true;
         }
         if(needNewQuery){
@@ -150,15 +173,47 @@ Page({
             },
           });
         }
-        await db.collection('goodSearchHistory').add({
-          data: {
-            goodId:goodId,
-            timestamp: this.getLocalTime(currentTime),
-            title: goodDb.title,
-            star: goodDb.star,
-            money: goodDb.money,
-          }
-        });
+
+        if(goodDb){
+          // 之前有搜过
+          await db.collection('goodSearchHistory').add({
+            data: {
+              goodId:goodId,
+              timestamp: currentTime,
+              localTime:this.getLocalTime(currentTime),
+              lastQueryTime: goodDb.lastQueryTime,
+              title: goodDb.title,
+              star: goodDb.star,
+              money: goodDb.money,
+              type,
+            }
+          });
+        }else{
+          // 第一次搜索
+          await db.collection('goodSearchHistory').add({
+            data: {
+              goodId:goodId,
+              timestamp: currentTime,
+              localTime:this.getLocalTime(currentTime),
+              type,
+            }
+          });
+        }
+
+        if(goodDb){
+          wx.reportAnalytics('query_in_search', {
+            search_id: goodId,
+            search_star: goodDb.star,
+            search_title: goodDb.title,
+          });
+        }else{
+          wx.reportAnalytics('query_in_search', {
+            search_id: goodId,
+            search_star: 'none',
+            search_title: 'none',
+          });
+        }
+
       }
     }
   },
@@ -318,6 +373,20 @@ Page({
       collected: true
     })
     wx.hideLoading();
+  },
+
+  toggleItems(){
+    let showItems = !this.data.showItems;
+    this.setData({
+      showItems
+    });
+  },
+
+  toggleClass(){
+    let showClass = !this.data.showClass;
+    this.setData({
+      showClass
+    });
   },
 
   onShareAppMessage: function (res) {

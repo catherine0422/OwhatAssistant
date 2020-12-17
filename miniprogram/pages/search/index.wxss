@@ -10,6 +10,7 @@ scroll-view{
 .search{
   background-color: white;
   padding: 30rpx;
+  margin-bottom: 20rpx;
 }
 .form-id{
   display: flex;
@@ -123,4 +124,16 @@ input{
   color: var(--muteColor);
   text-align: center;
   margin: 20rpx 0;
+}
+.chevron{
+  width: 30rpx;
+  height: 30rpx;
+}
+.items-title, .userClass-title{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.body{
+  margin-top:20rpx;
 }
