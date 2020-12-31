@@ -13,7 +13,7 @@ const NOT_START = 'not start';
 const FINISH = 'finish';
 const START = 'start';
 
-const SCOLE = 200;
+const SCOLE = 160;
 
 const headers = { 'Host': 'appo4.owhat.cn',
 'Content-Type': 'application/x-www-form-urlencoded',
@@ -35,14 +35,17 @@ exports.main = async (event, context) => {
     let newCount = await getCount(id, index, count);
     console.log('count', newCount);
     onQuery = !newCount.isFinish;
+    let salesRes = await getSalesItems(id);
+    console.log('items:', salesRes.salesItems);
     if (newCount.isFinish){
       await db.collection('goodDb').doc(id).update({
         data: {
           userClass: newCount.userClass,
           userCount: newCount.userCount,
-          money: newCount.money,
           average: newCount.average,
-          onQuery
+          onQuery,
+          salesItems: salesRes.salesItems,
+          money: salesRes.money,
         }
       });
     } else{
@@ -220,3 +223,34 @@ function getLocalTimeDiff(start, end){
   return timeDiff;
 }
 
+async function getSalesItems(id) {
+  const params = {
+    "client": { "platform": "ios", "deviceid": "294311C1-01D2-48B9-8AB0-43FDC0DF9555", "channel": "AppStore", "version": "5.5.0" },
+    "cmd_m": 'findPricesAndStock',
+    "cmd_s": 'shop.price',
+    "data": { "fk_goods_id": id },
+    "v": '1.6.21L'
+  };
+  const options = {
+    method: 'POST',
+    url,
+    params,
+    headers
+  }
+  const res = await axios(options);
+  const data = res.data.data.prices;
+  const salesItems = [];
+  var money = 0;
+  for (let item of data) {
+    salesItems.push({
+      name: item.name,
+      price: item.pricestr,
+      saleStock: item.salestock
+    })
+    money += item.salestock * item.price
+  }
+  return {
+    salesItems,
+    money: (money).toFixed(2)
+  };
+}

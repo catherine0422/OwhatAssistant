@@ -14,7 +14,7 @@ const FINISH = 'finish';
 const START = 'start';
 
 // 由于60秒限制，每次读取前 200*100 人
-const SCOLE = 200;
+const SCOLE = 160;
 
 const headers = { 'Host': 'appo4.owhat.cn',
 'Content-Type': 'application/x-www-form-urlencoded',
@@ -32,10 +32,10 @@ exports.main = async (event, context) => {
   try{
     let goodIntro = await getGoodIntro(id);
     console.log('Goodintro:', goodIntro);
-    let salesItems = await getSalesItems(id);
-    console.log('items:', salesItems);
     let count = await getCount(id);
     console.log('count', count);
+    let salesRes = await getSalesItems(id);
+    console.log('items:', salesRes.salesItems);
     onQuery = !count.isFinish;
     if (count.isFinish){
       await db.collection('goodDb').doc(id).set({
@@ -52,9 +52,9 @@ exports.main = async (event, context) => {
           localTime: goodIntro.localTime,
           userClass: count.userClass,
           userCount: count.userCount,
-          money: count.money,
           average: count.average,
-          salesItems,
+          salesItems: salesRes.salesItems,
+          money: salesRes.money,
           onQuery
         }
       });
@@ -82,9 +82,9 @@ exports.main = async (event, context) => {
             cZero: 0
           },
           userCount: '...',
-          money: '...',
+          money: salesRes.money,
           average: '...',
-          salesItems,
+          salesItems: salesRes.salesItems,
           onQuery
         }
       });
@@ -270,14 +270,19 @@ async function getSalesItems(id) {
     const res = await axios(options);
     const data = res.data.data.prices;
     const salesItems = [];
+    var money = 0;
     for (let item of data) {
       salesItems.push({
         name: item.name,
         price: item.pricestr,
         saleStock: item.salestock
       })
+      money += item.salestock * item.price
     }
-    return salesItems;
+    return {
+      salesItems,
+      money: (money).toFixed(2)
+    };
 }
 
 function getLocalTime(nS) {

@@ -9,6 +9,7 @@ const TYPE_STORED = 3;
 const TYPE_FINISH = 4;
 const TYPE_ON_QUERY = 5;
 const TYPE_FIRST_QUERY = 6;
+const TYPE_ON_QUERY_OUT_OF_TIME = 7;
 
 const db = wx.cloud.database()
 const _ = db.command
@@ -75,8 +76,9 @@ Page({
       const storageData = wx.getStorageSync(goodId + '')
       const d = new Date();
       let currentTime = d.getTime();
+
+      // 已结束项目，曾经查询过，存储在storagedata里
       if (storageData){
-        // 已结束项目，曾经查询过，存储在storagedata里
         console.log('已结束项目，曾经查询过，存储在storagedata里');
         wx.hideLoading();
         this.showGood(storageData)
@@ -95,6 +97,7 @@ Page({
           search_star: storageData.star,
           search_title: storageData.title,
         });
+      // 未存储在storagedata里
       }else{
         const resGoodDb = await db.collection('goodDb').where({
           goodId:goodId,
@@ -102,6 +105,8 @@ Page({
         const goodDb = resGoodDb.data[0];
         let needNewQuery = false; // 需要重新读取数据
         let type;
+
+        // 已查询过
         if (goodDb){
           this.showGood(goodDb);
           if (!goodDb.onQuery && goodDb.status == FINISH){
@@ -124,14 +129,21 @@ Page({
                 wx.hideLoading()
               }
             }else{
-              // 正在查询中
               wx.hideLoading()
-              type = TYPE_ON_QUERY;
-              wx.showModal({
-                content:'后台读取最新数据中，请稍等片刻。（若您未点击查询，则其他用户已查询此项目。根据项目人数，查询时间为10秒-2分钟。请稍等片刻，再次查询，即可查看最新数据。）',
-                showCancel:false
-              })
-              console.log('正在查询中');
+              if(currentTime - goodDb.lastQueryTime > 60*1000*3){
+                // 距离上次查询时间大于5分钟， query out of time, 重新查询
+                needNewQuery = true;
+                console.log('距上次查询大于五分钟， query out of time，重新查询');
+                type = TYPE_ON_QUERY_OUT_OF_TIME;
+              }else{
+                // 正在查询中
+                type = TYPE_ON_QUERY;
+                wx.showModal({
+                  content:'后台读取最新数据中，请稍等片刻。（若您未点击查询，则其他用户已查询此项目。根据项目人数，查询时间为10秒-2分钟。请稍等片刻，再次查询，即可查看最新数据。）',
+                  showCancel:false
+                })
+                console.log('正在查询中');
+              }              
             }
           }
         }else{
@@ -145,7 +157,8 @@ Page({
             await db.collection('goodDb').doc(goodDb._id).set({
               data:{
                 onQuery: true,
-                goodId: goodId
+                goodId: goodId,
+                lastQueryTime: currentTime
               }
             })
           }else{
@@ -153,7 +166,8 @@ Page({
               data:{
                 _id: goodId,
                 goodId: goodId,
-                onQuery: true
+                onQuery: true,
+                lastQueryTime: currentTime
               }
             })
           }
@@ -174,6 +188,7 @@ Page({
           });
         }
 
+        // 添加搜索记录
         if(goodDb){
           // 之前有搜过
           await db.collection('goodSearchHistory').add({
@@ -200,6 +215,7 @@ Page({
           });
         }
 
+        // 给微信统计报备
         if(goodDb){
           wx.reportAnalytics('query_in_search', {
             search_id: goodId,

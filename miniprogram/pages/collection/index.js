@@ -171,12 +171,20 @@ Page({
             }else{
               // 正在查询中
               wx.hideLoading()
-              type = TYPE_ON_QUERY;
-              wx.showModal({
-                content:'后台读取最新数据中，请稍等片刻。（若您未点击查询，则其他用户已查询此项目。根据项目人数，查询时间为10秒-2分钟。请稍等片刻，再次查询，即可查看最新数据。）',
-                showCancel:false
-              })
-              console.log('正在查询中');
+              if(currentTime - goodDb.lastQueryTime > 60*1000*3){
+                // 距离上次查询时间大于5分钟， query out of time, 重新查询
+                needNewQuery = true;
+                console.log('距上次查询大于五分钟， query out of time，重新查询');
+                type = TYPE_ON_QUERY_OUT_OF_TIME;
+              }else{
+                // 正在查询中
+                type = TYPE_ON_QUERY;
+                wx.showModal({
+                  content:'后台读取最新数据中，请稍等片刻。（若您未点击查询，则其他用户已查询此项目。根据项目人数，查询时间为10秒-2分钟。请稍等片刻，再次查询，即可查看最新数据。）',
+                  showCancel:false
+                })
+                console.log('正在查询中');
+              }    
             }
           }
         }else{
@@ -190,7 +198,8 @@ Page({
             await db.collection('goodDb').doc(goodDb._id).set({
               data:{
                 onQuery: true,
-                goodId: goodId
+                goodId: goodId,
+                lastQueryTime: currentTime
               }
             })
           }else{
@@ -198,7 +207,8 @@ Page({
               data:{
                 _id: goodId,
                 goodId: goodId,
-                onQuery: true
+                onQuery: true,
+                lastQueryTime: currentTime
               }
             })
           }
@@ -260,26 +270,28 @@ Page({
   },
 
   showGood(goodDb, index){
-    let collection = this.data.collection;
-    collection[index] = {
-      goodId: goodDb.goodId,
-      startTime: goodDb.startTime,
-      endTime: goodDb.endTime,
-      lastQueryTime: goodDb.lastQueryTime,
-      localTime: goodDb.localTime,
-      salesItems: goodDb.salesItems,
-      money: goodDb.money,
-      userCount: goodDb.userCount,
-      average: goodDb.average,
-      userClass: goodDb.userClass,
-      star: goodDb.star,
-      title: goodDb.title,
-      fanClub: goodDb.fanClub,
-      status: goodDb.status
-    };
-    this.setData({
-      collection: collection
-    })
+    if(goodDb.title){
+      let collection = this.data.collection;
+      collection[index] = {
+        goodId: goodDb.goodId,
+        startTime: goodDb.startTime,
+        endTime: goodDb.endTime,
+        lastQueryTime: goodDb.lastQueryTime,
+        localTime: goodDb.localTime,
+        salesItems: goodDb.salesItems,
+        money: goodDb.money,
+        userCount: goodDb.userCount,
+        average: goodDb.average,
+        userClass: goodDb.userClass,
+        star: goodDb.star,
+        title: goodDb.title,
+        fanClub: goodDb.fanClub,
+        status: goodDb.status
+      };
+      this.setData({
+        collection: collection
+      })
+    }
   },
 
 
