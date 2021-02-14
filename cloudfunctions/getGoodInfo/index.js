@@ -30,10 +30,10 @@ exports.main = async (event, context) => {
   const {id} = event;
   console.log('读取id：', id);
   try{
-    let goodIntro = await getGoodIntro(id);
-    console.log('Goodintro:', goodIntro);
     let count = await getCount(id);
     console.log('count', count);
+    let goodIntro = await getGoodIntro(id);
+    console.log('Goodintro:', goodIntro);
     let salesRes = await getSalesItems(id);
     console.log('items:', salesRes.salesItems);
     onQuery = !count.isFinish;
@@ -52,14 +52,15 @@ exports.main = async (event, context) => {
           localTime: goodIntro.localTime,
           userClass: count.userClass,
           userCount: count.userCount,
-          average: count.average,
+          average: (salesRes.money/count.userCount).toFixed(2),
           salesItems: salesRes.salesItems,
-          money: salesRes.money,
+          money: (salesRes.money).toFixed(2),
           onQuery
         }
       });
     }else{
       // 未完成，则调用云函数读取下一个200*100人
+      console.log('调用getgoodInfopage, 分批读取')
       await db.collection('goodDb').doc(id).set({
         data: {
           goodId: goodIntro.goodId,
@@ -82,7 +83,7 @@ exports.main = async (event, context) => {
             cZero: 0
           },
           userCount: '...',
-          money: salesRes.money,
+          money: (salesRes.money).toFixed(2),
           average: '...',
           salesItems: salesRes.salesItems,
           onQuery
@@ -281,15 +282,15 @@ async function getSalesItems(id) {
     }
     return {
       salesItems,
-      money: (money).toFixed(2)
+      money: money
     };
 }
 
 function getLocalTime(nS) {
-  let time = new Date(parseInt(nS));
+  let time = new Date(parseInt(nS + 28800000));
   let months = time.getMonth() + 1;
   let days = time.getDate();
-  let hours = time.getUTCHours() + 8;
+  let hours = time.getUTCHours();
   if (hours >= 24){
     hours = hours - 24;
     days = days + 1;

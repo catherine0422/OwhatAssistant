@@ -37,15 +37,21 @@ exports.main = async (event, context) => {
     onQuery = !newCount.isFinish;
     let salesRes = await getSalesItems(id);
     console.log('items:', salesRes.salesItems);
+    const d = new Date();
+    const currentTime = d.getTime();
     if (newCount.isFinish){
       await db.collection('goodDb').doc(id).update({
         data: {
           userClass: newCount.userClass,
           userCount: newCount.userCount,
-          average: newCount.average,
+          average: (salesRes.money/newCount.userCount).toFixed(2),
           onQuery,
           salesItems: salesRes.salesItems,
-          money: salesRes.money,
+          money: (salesRes.money).toFixed(2),
+          lastQueryTime:currentTime,
+          localTime:{
+            lastQueryTime:getLocalTime(currentTime),
+          }
         }
       });
     } else{
@@ -188,10 +194,10 @@ async function getSalesItems(id) {
 }
 
 function getLocalTime(nS) {
-  let time = new Date(parseInt(nS));
+  let time = new Date(parseInt(nS + 28800000));
   let months = time.getMonth() + 1;
   let days = time.getDate();
-  let hours = time.getUTCHours() + 8;
+  let hours = time.getUTCHours();
   if (hours >= 24){
     hours = hours - 24;
     days = days + 1;
@@ -251,6 +257,6 @@ async function getSalesItems(id) {
   }
   return {
     salesItems,
-    money: (money).toFixed(2)
+    money: money
   };
 }

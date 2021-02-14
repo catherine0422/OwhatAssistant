@@ -8,6 +8,7 @@ const TYPE_STORED = 3;
 const TYPE_FINISH = 4;
 const TYPE_ON_QUERY = 5;
 const TYPE_FIRST_QUERY = 6;
+const TYPE_ON_QUERY_OUT_OF_TIME = 7;
 
 const db = wx.cloud.database()
 const _ = db.command
