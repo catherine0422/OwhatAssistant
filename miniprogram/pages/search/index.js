@@ -11,6 +11,8 @@ const TYPE_ON_QUERY = 5;
 const TYPE_FIRST_QUERY = 6;
 const TYPE_ON_QUERY_OUT_OF_TIME = 7;
 
+
+
 const db = wx.cloud.database()
 const _ = db.command
 Page({
@@ -55,6 +57,7 @@ Page({
    * 生命周期函数--监听页面加载
    */
   onLoad: async function (options) {
+
   },
 
   async formSubmit(e) {

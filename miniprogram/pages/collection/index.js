@@ -10,6 +10,8 @@ const TYPE_ON_QUERY = 5;
 const TYPE_FIRST_QUERY = 6;
 const TYPE_ON_QUERY_OUT_OF_TIME = 7;
 
+let interstitialAd = null //插页广告
+
 const db = wx.cloud.database()
 const _ = db.command
 Page({
@@ -25,11 +27,26 @@ Page({
    * 生命周期函数--监听页面加载
    */
   onLoad (options) {
+    // 在页面onLoad回调事件中创建插屏广告实例
+    if (wx.createInterstitialAd) {
+      interstitialAd = wx.createInterstitialAd({
+        adUnitId: 'adunit-c58478bc2a605bd6'
+      })
+      interstitialAd.onLoad(() => {console.log('调用插屏广告')})
+      interstitialAd.onError((err) => {console.log('插屏广告错误' + err)})
+      interstitialAd.onClose(() => {console.log('关闭插屏广告')})
+    }
     this.getCollection();
   },
 
   onShow(){
     this.getCollection();
+    // 在适合的场景显示插屏广告
+    if (interstitialAd) {
+      interstitialAd.show().catch((err) => {
+        console.error(err)
+      })
+    }
   },
 
   async getCollection(){
