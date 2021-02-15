@@ -14,7 +14,7 @@
 			</form>
 		</view>
 	
-		<ad unit-id="adunit-f2be5edaf480ec8c" ad-intervals="30"></ad>
+		<!-- <ad unit-id="adunit-f2be5edaf480ec8c" ad-intervals="30"></ad> -->
 		
 		<view class="log" wx:if="{{log.length>0}}">
 			<text class="log-title">运行日志：</text>
@@ -30,11 +30,15 @@
 					<view class="fan">{{fanClub}}</view>
 					<view class="idol">{{star}}</view>
 				</view>
-				<view class="addCollection" >
-					<view class="addCollectionText" bindtap="collect">收藏</view>
-					<image wx:if="{{!collected}}" class="collection" src="../../icons/collection-selected.png" mode="aspectFit" bindtap="collect"></image>
-					<image wx:else class="collection" src="../../icons/collection-selected-full.png" mode="aspectFit"></image>
+				<view class="subtitle-right" wx:if="{{goodId}}">
+					<view class="addCollection" >
+						<view class="addCollectionText" bindtap="collect">收藏</view>
+						<image wx:if="{{!collected}}" class="collection" src="../../icons/collection-selected.png" mode="aspectFit" bindtap="collect"></image>
+						<image wx:else class="collection" src="../../icons/collection-selected-full.png" mode="aspectFit"></image>
+					</view>
+					<view> Id：{{goodId}}</view>
 				</view>
+
 			</view>
 			<view class="last-query-time" wx:if="{{status=='start' && lastQueryTime}}">
 			<text class="hint">数据截至：{{localTime.lastQueryTime}}(最短查询间隔五分钟)</text>
@@ -68,7 +72,10 @@
 						</view>
 					</view>
 				</view>
-				<view class="line line2"></view>
+
+				<image class = "adds" src="../../image/add.png" mode="aspectFit"></image>
+				<!-- <view class="line line2"></view> -->
+
 				<view class="count">
 					<view class="left">
 						<view>参与人数</view>
