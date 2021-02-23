@@ -67,6 +67,21 @@ Page({
       videoAd.onError((err) => {console.log('激励视频准备出错')})
       videoAd.onClose((res) => {console.log('激励视频关闭')})
     }
+    let openid = wx.getStorageSync('openid');
+    let hasCount;
+    const resUser = await db.collection('user').where({
+      _openid: openid
+    }).get()
+    if (resUser.data.length > 0){
+      console.log('云端有账户')
+      userCollection = resUser.data[0].collection;
+      hasCount = true;
+    }else{
+      hasCount = false;
+    }
+    if(hasCount){
+      
+    }
   },
 
   async formSubmit(e) {
@@ -312,7 +327,7 @@ Page({
       title: '添加收藏中',
     });
     let userCollection = wx.getStorageSync('userCollection')
-    let openid = wx.getStorageSync('openid');;
+    let openid = wx.getStorageSync('openid');
     let hasCount = false;
     if (userCollection){
       console.log('已存在本地')
