@@ -14,14 +14,7 @@
 			</form>
 		</view>
 	
-		<!-- <ad unit-id="adunit-f2be5edaf480ec8c" ad-intervals="30"></ad> -->
-		
-		<view class="log" wx:if="{{log.length>0}}">
-			<text class="log-title">运行日志：</text>
-			<view class="log-item" wx:for="{{log}}" wx:key="*this">
-				{{item}}
-			</view>
-		</view>
+		<ad unit-id="adunit-f2be5edaf480ec8c" ad-intervals="30"></ad>
 
 		<view class="goodInfo">
 			<view class="info-title">{{title}}</view>
@@ -73,8 +66,7 @@
 					</view>
 				</view>
 
-				<image class = "adds" src="../../image/add.png" mode="aspectFit"></image>
-				<!-- <view class="line line2"></view> -->
+				<view class="line line2"></view>
 
 				<view class="count">
 					<view class="left">
