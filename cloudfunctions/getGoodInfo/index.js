@@ -30,73 +30,92 @@ exports.main = async (event, context) => {
   const {id} = event;
   console.log('读取id：', id);
   try{
-    let count = await getCount(id);
-    console.log('count', count);
     let goodIntro = await getGoodIntro(id);
     console.log('Goodintro:', goodIntro);
-    let salesRes = await getSalesItems(id);
-    console.log('items:', salesRes.salesItems);
-    onQuery = !count.isFinish;
-    if (count.isFinish){
-      await db.collection('goodDb').doc(id).set({
-        data: {
-          goodId: goodIntro.goodId,
-          startTime: goodIntro.startTime,
-          endTime: goodIntro.endTime,
-          lastQueryTime: goodIntro.lastQueryTime,
-          star: goodIntro.star,
-          title: goodIntro.title,
-          fanClub: goodIntro.fanClub,
-          status: goodIntro.status,
-          star: goodIntro.star,
-          localTime: goodIntro.localTime,
-          userClass: count.userClass,
-          userCount: count.userCount,
-          average: (salesRes.money/count.userCount).toFixed(2),
-          salesItems: salesRes.salesItems,
-          money: (salesRes.money).toFixed(2),
-          onQuery
-        }
-      });
+    let needNewQuery = true;
+    if(goodIntro.status == FINISH){
+      console.log('ow中数据已完结')
+      const resGoodDb = await db.collection('goodDb').where({
+        goodId:id,
+      }).get();
+      const goodDb = resGoodDb.data[0];
+      if(goodDb.status == FINISH){
+        console.log('数据库中数据也已完结')
+        needNewQuery = false;
+      }else{
+        console.log('数据库中数据未完结')
+      }
     }else{
-      // 未完成，则调用云函数读取下一个200*100人
-      console.log('调用getgoodInfopage, 分批读取')
-      await db.collection('goodDb').doc(id).set({
-        data: {
-          goodId: goodIntro.goodId,
-          startTime: goodIntro.startTime,
-          endTime: goodIntro.endTime,
-          lastQueryTime: goodIntro.lastQueryTime,
-          star: goodIntro.star,
-          title: goodIntro.title,
-          fanClub: goodIntro.fanClub,
-          status: goodIntro.status,
-          star: goodIntro.star,
-          localTime: goodIntro.localTime,
-          userClass: {
-            cThreeThousand: 0,
-            cThousand: 0,
-            cThreeHundred: 0,
-            cHundred: 0,
-            cFifty: 0,
-            cTwenty: 0,
-            cZero: 0
-          },
-          userCount: '...',
-          money: (salesRes.money).toFixed(2),
-          average: '...',
-          salesItems: salesRes.salesItems,
-          onQuery
-        }
-      });
-      cloud.callFunction({
-        name:'getGoodInfoPage',
-        data:{
-          id:id,
-          count:count,
-          index:1
-        }
-      });
+      console.log('ow数据未完结')
+    }
+    if(needNewQuery){
+
+      let count = await getCount(id);
+      console.log('count', count);
+      let salesRes = await getSalesItems(id);
+      console.log('items:', salesRes.salesItems);
+      onQuery = !count.isFinish;
+      if (count.isFinish){
+        await db.collection('goodDb').doc(id).set({
+          data: {
+            goodId: goodIntro.goodId,
+            startTime: goodIntro.startTime,
+            endTime: goodIntro.endTime,
+            lastQueryTime: goodIntro.lastQueryTime,
+            star: goodIntro.star,
+            title: goodIntro.title,
+            fanClub: goodIntro.fanClub,
+            status: goodIntro.status,
+            star: goodIntro.star,
+            localTime: goodIntro.localTime,
+            userClass: count.userClass,
+            userCount: count.userCount,
+            average: (salesRes.money/count.userCount).toFixed(2),
+            salesItems: salesRes.salesItems,
+            money: (salesRes.money).toFixed(2),
+            onQuery
+          }
+        });
+      }else{
+        // 未完成，则调用云函数读取下一个200*100人
+        console.log('调用getgoodInfopage, 分批读取')
+        await db.collection('goodDb').doc(id).set({
+          data: {
+            goodId: goodIntro.goodId,
+            startTime: goodIntro.startTime,
+            endTime: goodIntro.endTime,
+            lastQueryTime: goodIntro.lastQueryTime,
+            star: goodIntro.star,
+            title: goodIntro.title,
+            fanClub: goodIntro.fanClub,
+            status: goodIntro.status,
+            star: goodIntro.star,
+            localTime: goodIntro.localTime,
+            userClass: {
+              cThreeThousand: 0,
+              cThousand: 0,
+              cThreeHundred: 0,
+              cHundred: 0,
+              cFifty: 0,
+              cTwenty: 0,
+              cZero: 0
+            },
+            userCount: '...',
+            money: (salesRes.money).toFixed(2),
+            average: '...',
+            salesItems: salesRes.salesItems,
+            onQuery
+          }
+        });
+        cloud.callFunction({
+          name:'getGoodInfoPage',
+          data:{
+            id:id,
+            count:count,
+            index:1
+          }
+        });
+      }
     }
     return{
       event
